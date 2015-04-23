@@ -10,7 +10,7 @@ Dependencies:
    -- openssl
 
 --------------------------------------------------------------------------------
-Building Xixibase server
+Building Xixibase server, since time limit I will focus on Linux 64bits, other platforms maybe have some issues. If you need, please do it for youself.
 Windows 32:
    run build_win32.bat
 
