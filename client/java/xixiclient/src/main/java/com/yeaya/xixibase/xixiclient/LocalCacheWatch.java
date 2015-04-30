@@ -24,8 +24,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.yeaya.xixibase.xixiclient.multi.MultiUpdateExpirationItem;
-import com.yeaya.xixibase.xixiclient.util.Log;
 
 class GroupItem {
 	private HashMap<String, CacheItem> inactiveCacheMap = new HashMap<String, CacheItem>();
@@ -164,7 +166,7 @@ class GroupItem {
 }
 
 class LocalCacheWatch extends Thread {
-	private static Log log = Log.getLog(LocalCacheWatch.class.getName());
+	final static Logger log = LoggerFactory.getLogger(LocalCacheWatch.class);
 	
 	private String host;
 	private CacheClientManager manager;

@@ -21,10 +21,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.yeaya.xixibase.xixiclient.util.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LocalCache {
-	private static Log log = Log.getLog(LocalCache.class.getName());
+	final static Logger log = LoggerFactory.getLogger(LocalCache.class);
 
 	private ConcurrentHashMap<String, LocalCacheWatch> watchMap = new ConcurrentHashMap<String, LocalCacheWatch>();
 	private CacheClientManager manager;

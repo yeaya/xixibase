@@ -13,12 +13,16 @@ import java.util.Properties;
 import java.util.Map.Entry;
 import java.lang.Integer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.yeaya.xixibase.xixiclient.util.CurrentTick;
-import com.yeaya.xixibase.xixiclient.util.Log;
 
 import junit.framework.TestCase;
 
 public class CacheClientTest extends TestCase {
+	final static Logger log = LoggerFactory.getLogger(CacheClientTest.class);
+
 	private static final String managerName1 = "manager1";
 	private static CacheClientManager mgr1 = null;
 	private static CacheClient cc1 = null;
@@ -53,15 +57,12 @@ public class CacheClientTest extends TestCase {
 		super.setUp();
 		CacheClientManager mgr1 = CacheClientManager.getInstance(managerName1);
 		cc1 = mgr1.createClient();
-		Log.enableLog4j();
-		Log.setLevel(0);
 	}
 
 	protected void tearDown() throws Exception {
 		super.tearDown();
 		assertNotNull(cc1);
 		cc1.flush();
-		Log.disableLog4j();
 	}
 
 	public void testFlush() {

@@ -27,16 +27,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.yeaya.xixibase.xixiclient.AsyncHandle;
 import com.yeaya.xixibase.xixiclient.CacheClientManager;
 import com.yeaya.xixibase.xixiclient.CacheItem;
 import com.yeaya.xixibase.xixiclient.Defines;
 import com.yeaya.xixibase.xixiclient.TransCoder;
 import com.yeaya.xixibase.xixiclient.XixiSocket;
-import com.yeaya.xixibase.xixiclient.util.Log;
 
 public final class MultiGet extends Defines {
-	private static Log log = Log.getLog(MultiGet.class.getName());
+	final static Logger log = LoggerFactory.getLogger(MultiGet.class);
 
 	private CacheClientManager manager;
 	private int groupID;

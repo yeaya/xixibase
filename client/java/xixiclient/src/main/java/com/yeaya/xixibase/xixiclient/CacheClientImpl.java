@@ -22,6 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.yeaya.xixibase.xixiclient.multi.MultiDelete;
 import com.yeaya.xixibase.xixiclient.multi.MultiDeleteItem;
 import com.yeaya.xixibase.xixiclient.multi.MultiGet;
@@ -29,11 +32,10 @@ import com.yeaya.xixibase.xixiclient.multi.MultiUpdate;
 import com.yeaya.xixibase.xixiclient.multi.MultiUpdateExpiration;
 import com.yeaya.xixibase.xixiclient.multi.MultiUpdateExpirationItem;
 import com.yeaya.xixibase.xixiclient.multi.MultiUpdateItem;
-import com.yeaya.xixibase.xixiclient.util.Log;
 
 public class CacheClientImpl extends Defines {
-	private static Log log = Log.getLog(CacheClientImpl.class.getName());
-	
+	final static Logger log = LoggerFactory.getLogger(CacheClientImpl.class);
+
 	private int groupID = 0;
 	private TransCoder transCoder = new ObjectTransCoder();
 	private CacheClientManager manager;

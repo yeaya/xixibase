@@ -1,34 +1,144 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.yeaya.xixibase</groupId>
-  <artifactId>xixiclient</artifactId>
-  <version>0.7</version>
-  <packaging>jar</packaging>
+	<groupId>com.yeaya.xixibase</groupId>
+	<artifactId>xixiclient</artifactId>
+	<version>0.8</version>
+	<packaging>jar</packaging>
 
-  <name>xixiclient</name>
-  <url>http://maven.apache.org</url>
+	<name>xixiclient</name>
+	<url>https://github.com/yeaya/xixibase/tree/master/client/java/xixiclient</url>
+	<description>https://github.com/yeaya/xixibase/tree/master/client/java/xixiclient</description>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+	<organization>
+		<name>yeaya</name>
+		<url>http://www.yeaya.com</url>
+	</organization>
 
-  <dependencies>
-	<dependency>
-		<groupId>junit</groupId>
-		<artifactId>junit</artifactId>
-		<version>4.4</version>
-		<scope>test</scope>
-	</dependency>
+	<scm>
+		<url>scm:git:https://github.com/yeaya/xixibase.git</url>
+		<connection>scm:git:https://github.com/yeaya/xixibase.git</connection>
+	</scm>
+
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.2</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.4</version>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.16</version>
-			<scope>compile</scope>
+			<scope>test</scope>
 		</dependency>
-  </dependencies>
-  <build>
-	<defaultGoal>install</defaultGoal>
-  </build> 
+	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>release</id>
+			<distributionManagement>
+				<snapshotRepository>
+					<id>oss</id>
+					<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+				</snapshotRepository>
+				<repository>
+					<id>oss</id>
+					<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+				</repository>
+			</distributionManagement>
+			<build>
+				<plugins>
+					<!-- Source -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>2.4</version>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<!-- Javadoc -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.10.2</version>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<!-- Gpg Signature -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.5</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<developers>
+		<developer>
+			<name>Yao Yuan</name>
+			<id>yeaya</id>
+			<email>yeaya@163.com</email>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>+8</timezone>
+		</developer>
+	</developers>
+
+	<build>
+		<finalName>xixiclient</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

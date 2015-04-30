@@ -28,16 +28,18 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.yeaya.xixibase.xixiclient.AsyncHandle;
 import com.yeaya.xixibase.xixiclient.CacheClientManager;
 import com.yeaya.xixibase.xixiclient.Defines;
 import com.yeaya.xixibase.xixiclient.LocalCache;
 import com.yeaya.xixibase.xixiclient.TransCoder;
 import com.yeaya.xixibase.xixiclient.XixiSocket;
-import com.yeaya.xixibase.xixiclient.util.Log;
 
 public final class MultiUpdateExpiration extends Defines {
-	private static Log log = Log.getLog(MultiUpdateExpiration.class.getName());
+	final static Logger log = LoggerFactory.getLogger(MultiUpdateExpiration.class);
 
 	private CacheClientManager manager;
 	private int groupID;

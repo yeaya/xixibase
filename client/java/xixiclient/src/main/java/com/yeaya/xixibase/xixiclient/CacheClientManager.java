@@ -24,9 +24,10 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import com.yeaya.xixibase.xixiclient.util.Log;
-import com.yeaya.xixibase.xixiclient.util.WeightMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.yeaya.xixibase.xixiclient.util.WeightMap;
 
 /**
  * Xixibase cache client manager.
@@ -35,7 +36,7 @@ import com.yeaya.xixibase.xixiclient.util.WeightMap;
  *
  */
 public class CacheClientManager {
-	private static Log log = Log.getLog(CacheClientManager.class.getName());
+	final static Logger log = LoggerFactory.getLogger(CacheClientManager.class);
 	private static ConcurrentHashMap<String, CacheClientManager> managers = new ConcurrentHashMap<String, CacheClientManager>();
 
 	private volatile boolean initialized = false;
