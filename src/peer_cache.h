@@ -18,9 +18,11 @@
 #define PEER_CACHE_H
 
 #include "defines.h"
+//#include <boost/asio/impl/src.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+//#include <boost/asio/ssl/impl/src.hpp>
 #include "cache_buffer.hpp"
 #include "util.h"
 #include "cache.h"
@@ -123,8 +125,8 @@ protected:
 protected:
 	boost::shared_ptr<Peer_Cache> self_;
 
-	mutex lock_;
-	mutex timer_lock_;
+	boost::mutex lock_;
+	boost::mutex timer_lock_;
 	peer_state  state_;
 	peer_state  next_state_;
 

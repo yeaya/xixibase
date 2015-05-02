@@ -259,7 +259,7 @@ private:
 	void free_flushed_items();
 
 private:
-	mutex cache_lock_;
+	boost::mutex cache_lock_;
 
 	xixi::hash_map<Cache_Key, Cache_Item> cache_hash_map_;
 

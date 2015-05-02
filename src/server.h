@@ -58,7 +58,7 @@ private:
 
 private:
 	std::string server_id_;
-	mutex lock_;
+	boost::mutex lock_;
 
 	io_service_pool io_service_pool_;
 	vector<boost::asio::ip::tcp::acceptor*> acceptors_;

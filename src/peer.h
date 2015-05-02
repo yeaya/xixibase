@@ -107,7 +107,7 @@ public:
 	}
 
 private:
-	mutex lock_;
+	boost::mutex lock_;
 	Map peer_map_;
 	PEER_ID peer_id_;
 };

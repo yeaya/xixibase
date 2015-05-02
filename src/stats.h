@@ -919,7 +919,7 @@ private:
 	void merage(Cache_Stats_Item& cache_stat);
 
 public:
-	mutex lock_;
+	boost::mutex lock_;
 
 	uint32_t max_class_id_;
 	uint32_t curr_conns_;

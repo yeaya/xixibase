@@ -184,8 +184,8 @@ protected:
 protected:
 	boost::shared_ptr<Peer_Http> self_;
 
-	mutex lock_;
-	mutex timer_lock_;
+	boost::mutex lock_;
+	boost::mutex timer_lock_;
 	peer_state  state_;
 	peer_state  next_state_;
 
