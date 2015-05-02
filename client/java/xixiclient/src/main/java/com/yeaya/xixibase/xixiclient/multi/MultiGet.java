@@ -31,26 +31,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.yeaya.xixibase.xixiclient.AsyncHandle;
-import com.yeaya.xixibase.xixiclient.CacheClientManager;
+import com.yeaya.xixibase.xixiclient.XixiClientManager;
 import com.yeaya.xixibase.xixiclient.CacheItem;
 import com.yeaya.xixibase.xixiclient.Defines;
 import com.yeaya.xixibase.xixiclient.TransCoder;
-import com.yeaya.xixibase.xixiclient.XixiSocket;
+import com.yeaya.xixibase.xixiclient.network.SocketManager;
+import com.yeaya.xixibase.xixiclient.network.XixiSocket;
 
 public final class MultiGet extends Defines {
 	final static Logger log = LoggerFactory.getLogger(MultiGet.class);
 
-	private CacheClientManager manager;
-	private int groupID;
+	private XixiClientManager manager;
+	private SocketManager socketManager;
+	private int groupId;
 	private TransCoder transCoder;
 	
 	private Selector selector;
 	private int numConns = 0;
 	private String lastError = null;
 	
-	public MultiGet(CacheClientManager manager, int groupID, TransCoder transCoder) {
+	public MultiGet(XixiClientManager manager, SocketManager socketManager, int groupId, TransCoder transCoder) {
 		this.manager = manager;
-		this.groupID = groupID;
+		this.socketManager = socketManager;
+		this.groupId = groupId;
 		this.transCoder = transCoder;
 	}
 	
@@ -95,7 +98,7 @@ public final class MultiGet extends Defines {
 					continue;
 				}
 
-				String host = manager.getHost(key);
+				String host = socketManager.getHost(key);
 				if (host == null) {
 					lastError = "multiGet, can not get host with the key";
 					log.error(lastError);
@@ -110,7 +113,7 @@ public final class MultiGet extends Defines {
 				conn.add(key, keyBuf, keyIndex);
 			}
 
-			selector = manager.selectorOpen();
+			selector = socketManager.selectorOpen();
 
 			Iterator<Entry<String, Connection>> itc = conns.entrySet().iterator();
 			while (itc.hasNext()) {
@@ -118,7 +121,7 @@ public final class MultiGet extends Defines {
 				String host = e.getKey();
 				Connection conn = e.getValue();
 				
-				XixiSocket socket = manager.getSocketByHost(host);
+				XixiSocket socket = socketManager.getSocketByHost(host);
 				if (socket != null) {
 					conn.init(socket, result);
 				}
@@ -151,7 +154,7 @@ public final class MultiGet extends Defines {
 			e.printStackTrace();
 		} finally {
 			try {
-				manager.selectorClose(selector);
+				socketManager.selectorClose(selector);
 				selector = null;
 			} catch (IOException e) {
 				lastError = "multiGet, close selector exception :" + e;
@@ -216,7 +219,7 @@ public final class MultiGet extends Defines {
 			}
 			outBuffer.put(XIXI_CATEGORY_CACHE);
 			outBuffer.put(XIXI_TYPE_GET_REQ);
-			outBuffer.putInt(groupID);
+			outBuffer.putInt(groupId);
 			outBuffer.putInt(NO_WATCH);
 			outBuffer.putShort((short) keyBuf.length);
 			outBuffer.put(keyBuf);
@@ -228,7 +231,7 @@ public final class MultiGet extends Defines {
 				}
 				outBuffer.put(XIXI_CATEGORY_CACHE);
 				outBuffer.put(XIXI_TYPE_GET_REQ);
-				outBuffer.putInt(groupID);
+				outBuffer.putInt(groupId);
 				outBuffer.putInt(NO_WATCH);
 				outBuffer.putShort((short) keyBuf.length);
 				outBuffer.put(keyBuf);
@@ -377,7 +380,7 @@ public final class MultiGet extends Defines {
 									key,
 									cacheID,
 									expiration,
-									groupID,
+									groupId,
 									flags,
 									obj,
 									objectSize[0],

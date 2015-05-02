@@ -32,9 +32,10 @@ public class CacheClientBench  {
 	int runs = 50000;
 	String keyBase = "key";
 	String object = "value";
-	CacheClient cc;
+	XixiClient cc;
+	XixiClient cc4lc;
 	
-	public CacheClientBench(String servers, int start, int runs, int groupID,
+	public CacheClientBench(String servers, int start, int runs, int groupId,
 			boolean consistentFlag, int hashingAlg, Integer[] weights, boolean enableSSL) {
 		this.start = start;
 		this.runs = runs;
@@ -42,14 +43,15 @@ public class CacheClientBench  {
 
 		XixiWeightMap<Integer> weightMap = new XixiWeightMap<Integer>(consistentFlag, hashingAlg);
 		
-		CacheClientManager manager = CacheClientManager.getInstance("CacheClientBench");
+		XixiClientManager manager = XixiClientManager.getInstance("CacheClientBench");
 		manager.setInitConn(2);
 		manager.setNoDelay(true);
 		manager.initialize(serverlist, weights, weightMap, enableSSL);
-		manager.enableLocalCache();
+	//	manager.enableLocalCache();
 		manager.getLocalCache().setMaxCacheSize(128 * 1024 * 1024);
 		
-		cc = manager.createClient(groupID);
+		cc = manager.createXixiClient(groupId);
+		cc4lc = manager.createXixiClient4LocalCahce(groupId);
 		
 		System.out.println("keybaselen=" + keyBase.length() + " objlen=" + object.length());
 	}
@@ -72,7 +74,7 @@ public class CacheClientBench  {
 		ret &= multiSet();
 		ret &= flush();
 		
-		CacheClientManager.getInstance("CacheClientBench").shutdown();
+		XixiClientManager.getInstance("CacheClientBench").shutdown();
 		return ret;
 	}
 
@@ -97,7 +99,7 @@ public class CacheClientBench  {
 		long begin = System.currentTimeMillis();
 		String obj = "";
 		for (int i = start; i < start + runs; i++) {
-			obj = (String)cc.getW(keyBase + i);
+			obj = (String)cc4lc.get(keyBase + i);
 			if (!object.equals(obj)) {
 				r = false;
 				System.out.println("getW error index=" + i + " obj=" + obj);
@@ -114,7 +116,7 @@ public class CacheClientBench  {
 		long begin = System.currentTimeMillis();
 		Object obj = "";
 		for (int i = start; i < start + runs; i++) {
-			obj = (String)cc.getL(keyBase + i);
+			obj = (String)cc4lc.get(keyBase + i);
 			if (!object.equals(obj)) {
 				r = false;
 				System.out.println("getL error index=" + i + " obj=" + obj);

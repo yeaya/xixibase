@@ -42,7 +42,7 @@ public final class MultiUpdateFlags extends Defines {
 /*	private static Log log = Log.getLog(MultiUpdateFlags.class.getName());
 
 	private CacheClientManager manager;
-	private int groupID;
+	private int groupId;
 	private TransCoder transCoder;
 	
 	private Selector selector;
@@ -51,9 +51,9 @@ public final class MultiUpdateFlags extends Defines {
 	private AtomicInteger successCount = new AtomicInteger(0);
 	private String lastError = null;
 	
-	public MultiUpdateFlags(CacheClientManager manager, int groupID, TransCoder transCoder) {
+	public MultiUpdateFlags(CacheClientManager manager, int groupId, TransCoder transCoder) {
 		this.manager = manager;
-		this.groupID = groupID;
+		this.groupId = groupId;
 		this.transCoder = transCoder;
 	}
 	
@@ -236,7 +236,7 @@ public final class MultiUpdateFlags extends Defines {
 			outBuffer.put(XIXI_TYPE_UPDATE_FLAGS_REQ);
 			outBuffer.put(opFlag);
 			outBuffer.putLong(item.cacheID);//uint64_t cacheID;
-			outBuffer.putInt(groupID);
+			outBuffer.putInt(groupId);
 			outBuffer.putInt(item.flags); // flags
 			outBuffer.putShort((short) keyBuf.length); // uint16_t key_length;
 			outBuffer.put(keyBuf);
@@ -261,7 +261,7 @@ public final class MultiUpdateFlags extends Defines {
 				outBuffer.put(XIXI_TYPE_UPDATE_FLAGS_REQ);
 				outBuffer.put(opFlag);
 				outBuffer.putLong(item.cacheID);//uint64_t cacheID;
-				outBuffer.putInt(groupID);
+				outBuffer.putInt(groupId);
 				outBuffer.putInt(item.flags); // flags
 				outBuffer.putShort((short) keyBuf.length); // uint16_t key_length;
 				outBuffer.put(keyBuf);

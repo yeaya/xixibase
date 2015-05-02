@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package com.yeaya.xixibase.xixiclient;
+package com.yeaya.xixibase.xixiclient.network;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -33,8 +33,11 @@ import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSession;
 
+import com.yeaya.xixibase.xixiclient.AsyncHandle;
+import com.yeaya.xixibase.xixiclient.ObjectTransCoder;
+
 public class SSLSocket implements XixiSocket {
-	private CacheClientManager manager;
+	private SocketManager manager;
 	private String host;
 	private Socket socket;
 	private SocketChannel socketChannel;
@@ -53,7 +56,7 @@ public class SSLSocket implements XixiSocket {
 	private SSLEngineResult res;
 	private SSLEngineResult.HandshakeStatus hsStatus;
 
-	public SSLSocket(CacheClientManager manager, String host,
+	public SSLSocket(SocketManager manager, String host,
 			int writeBufferSize, int timeout, int connectTimeout,
 			boolean noDelay) throws IOException, UnknownHostException,
 			KeyManagementException, NoSuchAlgorithmException {

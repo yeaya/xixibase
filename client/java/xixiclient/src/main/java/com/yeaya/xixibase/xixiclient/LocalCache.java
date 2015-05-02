@@ -24,20 +24,25 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.yeaya.xixibase.xixiclient.network.SocketManager;
+
 public class LocalCache {
 	final static Logger log = LoggerFactory.getLogger(LocalCache.class);
 
 	private ConcurrentHashMap<String, LocalCacheWatch> watchMap = new ConcurrentHashMap<String, LocalCacheWatch>();
-	private CacheClientManager manager;
+	private XixiClientManager manager;
+	private SocketManager socketManager;
 	private AtomicLong cacheSize = new AtomicLong(0);
 	private AtomicInteger cacheCount = new AtomicInteger(0);
 	private long maxCacheSize;
 	private long warningCacheSize;
 	private double warningCacheRate = 0.7;
 	private int maxDropCount = 100;
+	private boolean started = false;
 	
-	protected LocalCache(CacheClientManager manager, long maxCacheSize) {
+	protected LocalCache(XixiClientManager manager, SocketManager socketManager, long maxCacheSize) {
 		this.manager = manager;
+		this.socketManager = socketManager;
 		this.maxCacheSize = maxCacheSize;
 		this.warningCacheSize = (long)(maxCacheSize * warningCacheRate);
 	}
@@ -77,13 +82,17 @@ public class LocalCache {
 		return 0;
 	}
 
+	public boolean isOpen() {
+		return started;
+	}
+	
 	protected void start() {
 		if (watchMap.size() > 0) {
 			log.warn("start, LocalCache " + manager.getName() + " was already started.");
 			return;
 		}
 		log.info("start, maxCacheSize=" + maxCacheSize);
-		String[] hosts = manager.getServers();
+		String[] hosts = socketManager.getServers();
 		for (int i = 0; i < hosts.length; i++) {
 			String host = hosts[i];
 			LocalCacheWatch updater = new LocalCacheWatch(host, manager,
@@ -92,6 +101,7 @@ public class LocalCache {
 			log.info("start, localCache updater " + host + " start");
 			updater.init();
 		}
+		started = true;
 	}
 	
 	protected void stop() {
@@ -101,6 +111,7 @@ public class LocalCache {
 			updater.shutdown();
 		}
 		watchMap.clear();
+		started = false;
 	}
 
 	public void dropInactive(int maxDropCount) {
@@ -111,32 +122,32 @@ public class LocalCache {
 		}
 	}
 	
-	public CacheItem get(String host, int groupID, String key) {
+	public CacheItem get(String host, int groupId, String key) {
 		LocalCacheWatch updater = watchMap.get(host);
 		if (updater != null) {
-			CacheItem item = updater.get(groupID, key);
+			CacheItem item = updater.get(groupId, key);
 			return item;
 		}
 		return null;
 	}
 
-	public CacheItem get(int groupID, String key) {
-		String host = manager.getHost(key);
-		return get(host, groupID, key);
+	public CacheItem get(int groupId, String key) {
+		String host = socketManager.getHost(key);
+		return get(host, groupId, key);
 	}
 
-	public CacheItem getAndTouch(String host, int groupID, String key, int expiration) {
+	public CacheItem getAndTouch(String host, int groupId, String key, int expiration) {
 		LocalCacheWatch updater = watchMap.get(host);
 		if (updater != null) {
-			CacheItem item = updater.getAndTouch(groupID, key, expiration);
+			CacheItem item = updater.getAndTouch(groupId, key, expiration);
 			return item;
 		}
 		return null;
 	}
 /*
-	public CacheItem getAndTouch(int groupID, String key, int expiration) {
+	public CacheItem getAndTouch(int groupId, String key, int expiration) {
 		String host = manager.getHost(key);
-		return getAndTouch(host, groupID, key, expiration);
+		return getAndTouch(host, groupId, key, expiration);
 	}
 */	
 	public void put(String host, String key, CacheItem item) {
@@ -158,24 +169,24 @@ public class LocalCache {
 		put(host, key, value);
 	}
 */
-	public CacheItem remove(String host, int groupID, String key) {
+	public CacheItem remove(String host, int groupId, String key) {
 		LocalCacheWatch updater = watchMap.get(host);
 		if (updater != null) {
-			CacheItem item = updater.remove(groupID, key);
+			CacheItem item = updater.remove(groupId, key);
 			return item;
 		}
 		return null;
 	}
 	
-	public CacheItem remove(int groupID, String key) {
-		String host = manager.getHost(key);
-		return remove(host, groupID, key);
+	public CacheItem remove(int groupId, String key) {
+		String host = socketManager.getHost(key);
+		return remove(host, groupId, key);
 	}
 	
-	public void flush(String host, int groupID) {
+	public void flush(String host, int groupId) {
 		LocalCacheWatch updater = watchMap.get(host);
 		if (updater != null) {
-			updater.flush(groupID);
+			updater.flush(groupId);
 		}
 	}
 }

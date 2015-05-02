@@ -14,11 +14,13 @@
    limitations under the License.
 */
 
-package com.yeaya.xixibase.xixiclient;
+package com.yeaya.xixibase.xixiclient.network;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Selector;
+
+import com.yeaya.xixibase.xixiclient.AsyncHandle;
 
 public interface XixiSocket {
 	public ByteBuffer getWriteBuffer();

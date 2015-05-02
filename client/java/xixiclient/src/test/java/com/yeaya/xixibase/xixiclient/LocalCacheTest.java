@@ -54,69 +54,67 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testLocalCache() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("LocalCacheTest");
+		XixiClientManager mgr = XixiClientManager.getInstance("LocalCacheTest");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
-		cc.flush();
+		XixiClient c = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
+		c.flush();
 		assertEquals(lc.getCacheCount(), 0);
-		cc.setW("xixi", "value");
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
-		assertEquals(cc.get("xixi"), "value");
-		assertEquals(cc.getL("xixi"), "value");
-		assertEquals(cc.getsL("xixi").getValue(), "value");
-		assertEquals(cc.getW("xixi"), "value");
-		assertEquals(cc.getLW("xixi"), "value");
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		xc.set("xixi", "value");
+		assertEquals(lc.get(xc.getGroupId(), "xixi").getValue(), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.gets("xixi").getValue(), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(lc.get(xc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(lc.getCacheCount(), 1);
 		assertEquals(525, lc.getCacheSize());
 		assertEquals(lc.getMaxCacheSize(), 64 * 1024 * 1024);
-		assertNull(lc.remove("errhost", cc.getGroupID(), "xixi"));
-		assertNull(lc.remove(cc.getGroupID() + 1, "xixi"));
-		assertEquals("value", lc.remove(cc.getGroupID(), "xixi").getValue());
-		assertNull(lc.get(cc.getGroupID(), "xixi"));
-		assertEquals(cc.getsLW("xixi").getValue(), "value");
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertNull(lc.remove("errhost", c.getGroupId(), "xixi"));
+		assertNull(lc.remove(c.getGroupId() + 1, "xixi"));
+		assertEquals("value", lc.remove(c.getGroupId(), "xixi").getValue());
+		assertNull(lc.get(c.getGroupId(), "xixi"));
+		assertEquals(xc.gets("xixi").getValue(), "value");
+		assertEquals(lc.get(c.getGroupId(), "xixi").getValue(), "value");
 		lc.setMaxCacheSize(1024 * 1024);
 		assertEquals(lc.getMaxCacheSize(), 1024 * 1024);
 		lc.setWarningCacheRate(0.8);
 		assertEquals(lc.getWarningCacheRate(), 0.8);
 		
-		cc.setW("xixi2", "0315");
-		assertEquals("0315", lc.remove(cc.getGroupID(), "xixi2").getValue());
+		xc.set("xixi2", "0315");
+		assertEquals("0315", lc.remove(c.getGroupId(), "xixi2").getValue());
 		
-		mgr.disableLocalCache();
-		assertEquals(cc.get("xixi"), "value");
-		assertEquals(cc.getL("xixi"), "value");
-		assertEquals(cc.getW("xixi"), "value");
-		assertEquals(cc.getLW("xixi"), "value");
-		
-		
-		
+	//	mgr.disableLocalCache();
+		assertEquals(c.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+
 		mgr.shutdown();
 	}
 	
 	public void testSetW() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("LocalCacheTest");
+		XixiClientManager mgr = XixiClientManager.getInstance("LocalCacheTest");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
 		cc.flush();
 		assertEquals(lc.getCacheCount(), 0);
-		cc.setW("xixi", "value", 1);
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		xc.set("xixi", "value", 1);
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(cc.get("xixi"), "value");
-		assertEquals(cc.getL("xixi"), "value");
-		assertEquals(cc.getW("xixi"), "value");
-		assertEquals(cc.getLW("xixi"), "value");
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(lc.getCacheCount(), 1);
 		assertEquals(525, lc.getCacheSize());
 		assertEquals(lc.getMaxCacheSize(), 64 * 1024 * 1024);
@@ -127,11 +125,11 @@ public class LocalCacheTest extends TestCase {
 		
 		Thread.sleep(2000);
 		
-		assertNull(lc.get(cc.getGroupID(), "xixi"));
+		assertNull(lc.get(cc.getGroupId(), "xixi"));
 		assertNull(cc.get("xixi"));
-		assertNull(cc.getL("xixi"));
-		assertNull(cc.getW("xixi"));
-		assertNull(cc.getLW("xixi"));
+		assertNull(xc.get("xixi"));
+		assertNull(xc.get("xixi"));
+		assertNull(xc.get("xixi"));
 		assertEquals(lc.getCacheCount(), 0);
 		assertEquals(lc.getCacheSize(), 0);
 		assertEquals(lc.getMaxCacheSize(), 1024 * 1024);
@@ -142,26 +140,27 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testSetW2() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("LocalCacheTest");
+		XixiClientManager mgr = XixiClientManager.getInstance("LocalCacheTest");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
 		cc.flush();
 		assertEquals(lc.getCacheCount(), 0);
-		long ret = cc.setW("xixi", "value", 1, 123);
+		long ret = xc.set("xixi", "value", 1, 123);
 		assertTrue(ret != 0);
-		ret = cc.setW("xixi", "value", 1, 0);
+		ret = xc.set("xixi", "value", 1, 0);
 		assertTrue(ret != 0);
 		CacheItem item = cc.gets("xixi");
 		assertEquals("value", item.getValue());
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(cc.get("xixi"), "value");
-		assertEquals(cc.getL("xixi"), "value");
-		assertEquals(cc.getW("xixi"), "value");
-		assertEquals(cc.getLW("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
 		assertEquals(lc.getCacheCount(), 1);
 		assertEquals(525, lc.getCacheSize());
 		assertEquals(lc.getMaxCacheSize(), 64 * 1024 * 1024);
@@ -169,16 +168,16 @@ public class LocalCacheTest extends TestCase {
 		assertEquals(lc.getMaxCacheSize(), 1024 * 1024);
 		lc.setWarningCacheRate(0.8);
 		assertEquals(lc.getWarningCacheRate(), 0.8);
-		ret = cc.setW("xixi", "value2", 1, item.getCacheID());
+		ret = xc.set("xixi", "value2", 1, item.getCacheID());
 		assertTrue(ret != 0);
 		
 		Thread.sleep(2000);
 		
 		assertNull(cc.get("xixi"));
-		assertNull(lc.get(cc.getGroupID(), "xixi"));
-		assertNull(cc.getL("xixi"));
-		assertNull(cc.getW("xixi"));
-		assertNull(cc.getLW("xixi"));
+		assertNull(lc.get(cc.getGroupId(), "xixi"));
+		assertNull(xc.get("xixi"));
+		assertNull(xc.get("xixi"));
+		assertNull(xc.get("xixi"));
 		assertEquals(lc.getCacheCount(), 0);
 		assertEquals(lc.getCacheSize(), 0);
 		assertEquals(lc.getMaxCacheSize(), 1024 * 1024);
@@ -189,22 +188,23 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testAddW() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("LocalCacheTest");
+		XixiClientManager mgr = XixiClientManager.getInstance("LocalCacheTest");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
 		cc.flush();
 		assertEquals(lc.getCacheCount(), 0);
-		cc.addW("xixi", "value");
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		xc.add("xixi", "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(cc.get("xixi"), "value");
-		assertEquals(cc.getL("xixi"), "value");
-		assertEquals(cc.getW("xixi"), "value");
-		assertEquals(cc.getLW("xixi"), "value");
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(lc.getCacheCount(), 1);
 		assertEquals(525, lc.getCacheSize());
 		assertEquals(lc.getMaxCacheSize(), 64 * 1024 * 1024);
@@ -215,12 +215,12 @@ public class LocalCacheTest extends TestCase {
 		
 		Thread.sleep(2000);
 		
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(cc.get("xixi"), "value");
-		assertEquals(cc.getL("xixi"), "value");
-		assertEquals(cc.getW("xixi"), "value");
-		assertEquals(cc.getLW("xixi"), "value");
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(lc.getCacheCount(), 1);
 		assertEquals(525, lc.getCacheSize());
 		assertEquals(lc.getMaxCacheSize(), 1024 * 1024);
@@ -231,24 +231,25 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testAddW2() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("LocalCacheTest");
+		XixiClientManager mgr = XixiClientManager.getInstance("LocalCacheTest");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
 		cc.flush();
 		assertEquals(lc.getCacheCount(), 0);
-		long ret = cc.addW("xixi", "value", 1);
+		long ret = xc.add("xixi", "value", 1);
 		assertTrue(ret != 0);
 		CacheItem item = cc.gets("xixi");
 		assertEquals("value", item.getValue());
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(cc.get("xixi"), "value");
-		assertEquals(cc.getL("xixi"), "value");
-		assertEquals(cc.getW("xixi"), "value");
-		assertEquals(cc.getLW("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
 		assertEquals(lc.getCacheCount(), 1);
 		assertEquals(525, lc.getCacheSize());
 		assertEquals(lc.getMaxCacheSize(), 64 * 1024 * 1024);
@@ -256,25 +257,25 @@ public class LocalCacheTest extends TestCase {
 		assertEquals(lc.getMaxCacheSize(), 1024 * 1024);
 		lc.setWarningCacheRate(0.8);
 		assertEquals(lc.getWarningCacheRate(), 0.8);
-		ret = cc.addW("xixi", "value2", 1);
+		ret = xc.add("xixi", "value2", 1);
 		assertTrue(ret == 0);
 		item = cc.gets("xixi");
 		assertEquals("value", item.getValue());
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(cc.get("xixi"), "value");
-		assertEquals(cc.getL("xixi"), "value");
-		assertEquals(cc.getW("xixi"), "value");
-		assertEquals(cc.getLW("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
 		assertEquals(lc.getCacheCount(), 1);
 		assertEquals(525, lc.getCacheSize());
 		
 		Thread.sleep(2000);
 		
 		assertNull(cc.get("xixi"));
-		assertNull(lc.get(cc.getGroupID(), "xixi"));
-		assertNull(cc.getL("xixi"));
-		assertNull(cc.getW("xixi"));
-		assertNull(cc.getLW("xixi"));
+		assertNull(lc.get(cc.getGroupId(), "xixi"));
+		assertNull(xc.get("xixi"));
+		assertNull(xc.get("xixi"));
+		assertNull(xc.get("xixi"));
 		assertEquals(lc.getCacheCount(), 0);
 		assertEquals(lc.getCacheSize(), 0);
 		assertEquals(lc.getMaxCacheSize(), 1024 * 1024);
@@ -285,27 +286,28 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testReplaceW() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("LocalCacheTest");
+		XixiClientManager mgr = XixiClientManager.getInstance("LocalCacheTest");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
 		cc.flush();
 		assertEquals(lc.getCacheCount(), 0);
-		long ret = cc.replaceW("xixi", "value");
+		long ret = xc.replace("xixi", "value");
 		assertEquals(0, ret);
 		ret = cc.add("xixi", "1");
 		assertTrue(ret != 0);
-		ret = cc.replaceW("xixi", "value");
+		ret = xc.replace("xixi", "value");
 		assertTrue(ret != 0);
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(cc.get("xixi"), "value");
-		assertEquals(cc.getL("xixi"), "value");
-		assertEquals(cc.getW("xixi"), "value");
-		assertEquals(cc.getLW("xixi"), "value");
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(lc.getCacheCount(), 1);
 		assertEquals(525, lc.getCacheSize());
 		assertEquals(lc.getMaxCacheSize(), 64 * 1024 * 1024);
@@ -316,12 +318,12 @@ public class LocalCacheTest extends TestCase {
 		
 		Thread.sleep(2000);
 		
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(cc.get("xixi"), "value");
-		assertEquals(cc.getL("xixi"), "value");
-		assertEquals(cc.getW("xixi"), "value");
-		assertEquals(cc.getLW("xixi"), "value");
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(lc.getCacheCount(), 1);
 		assertEquals(525, lc.getCacheSize());
 		assertEquals(lc.getMaxCacheSize(), 1024 * 1024);
@@ -332,28 +334,29 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testReplaceW2() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("LocalCacheTest");
+		XixiClientManager mgr = XixiClientManager.getInstance("LocalCacheTest");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
 		cc.flush();
 		assertEquals(lc.getCacheCount(), 0);
-		long ret = cc.replaceW("xixi", "value", 1);
+		long ret = xc.replace("xixi", "value", 1);
 		assertEquals(0, ret);
 		ret = cc.add("xixi", "1");
 		assertTrue(ret != 0);
-		ret = cc.replaceW("xixi", "value", 1);
+		ret = xc.replace("xixi", "value", 1);
 		assertTrue(ret != 0);
 		CacheItem item = cc.gets("xixi");
 		assertEquals("value", item.getValue());
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(cc.get("xixi"), "value");
-		assertEquals(cc.getL("xixi"), "value");
-		assertEquals(cc.getW("xixi"), "value");
-		assertEquals(cc.getLW("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
 		assertEquals(lc.getCacheCount(), 1);
 		assertEquals(525, lc.getCacheSize());
 		assertEquals(lc.getMaxCacheSize(), 64 * 1024 * 1024);
@@ -361,25 +364,25 @@ public class LocalCacheTest extends TestCase {
 		assertEquals(lc.getMaxCacheSize(), 1024 * 1024);
 		lc.setWarningCacheRate(0.8);
 		assertEquals(lc.getWarningCacheRate(), 0.8);
-		ret = cc.addW("xixi", "value2", 1);
+		ret = xc.add("xixi", "value2", 1);
 		assertTrue(ret == 0);
 		item = cc.gets("xixi");
 		assertEquals("value", item.getValue());
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value");
 		assertEquals(cc.get("xixi"), "value");
-		assertEquals(cc.getL("xixi"), "value");
-		assertEquals(cc.getW("xixi"), "value");
-		assertEquals(cc.getLW("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
 		assertEquals(lc.getCacheCount(), 1);
 		assertEquals(525, lc.getCacheSize());
 		
 		Thread.sleep(2000);
 		
 		assertNull(cc.get("xixi"));
-		assertNull(lc.get(cc.getGroupID(), "xixi"));
-		assertNull(cc.getL("xixi"));
-		assertNull(cc.getW("xixi"));
-		assertNull(cc.getLW("xixi"));
+		assertNull(lc.get(cc.getGroupId(), "xixi"));
+		assertNull(xc.get("xixi"));
+		assertNull(xc.get("xixi"));
+		assertNull(xc.get("xixi"));
 		assertEquals(lc.getCacheCount(), 0);
 		assertEquals(lc.getCacheSize(), 0);
 		assertEquals(lc.getMaxCacheSize(), 1024 * 1024);
@@ -390,26 +393,27 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testReplaceW3() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("LocalCacheTest");
+		XixiClientManager mgr = XixiClientManager.getInstance("LocalCacheTest");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
 		cc.flush();
 		assertEquals(lc.getCacheCount(), 0);
 		long ret = cc.add("xixi", "value");
 		assertTrue(ret != 0);
-		ret = cc.replaceW("xixi", "value2", 1, 123);
+		ret = xc.replace("xixi", "value2", 1, 123);
 		assertEquals(0, ret);
 		CacheItem item = cc.gets("xixi");
 		assertEquals("value", item.getValue());
-		assertNull(lc.get(cc.getGroupID(), "xixi"));
+		assertNull(lc.get(cc.getGroupId(), "xixi"));
 		assertEquals(cc.get("xixi"), "value");
-		assertEquals(cc.getL("xixi"), "value");
-		assertEquals(cc.getW("xixi"), "value");
-		assertEquals(cc.getLW("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
+		assertEquals(xc.get("xixi"), "value");
 		assertEquals(lc.getCacheCount(), 1);
 		assertEquals(525, lc.getCacheSize());
 		assertEquals(lc.getMaxCacheSize(), 64 * 1024 * 1024);
@@ -417,25 +421,25 @@ public class LocalCacheTest extends TestCase {
 		assertEquals(lc.getMaxCacheSize(), 1024 * 1024);
 		lc.setWarningCacheRate(0.8);
 		assertEquals(lc.getWarningCacheRate(), 0.8);
-		ret = cc.replaceW("xixi", "value2", 1, item.cacheID);
+		ret = xc.replace("xixi", "value2", 1, item.cacheId);
 		assertTrue(ret != 0);
 		item = cc.gets("xixi");
 		assertEquals("value2", item.getValue());
-		assertEquals(lc.get(cc.getGroupID(), "xixi").getValue(), "value2");
+		assertEquals(lc.get(cc.getGroupId(), "xixi").getValue(), "value2");
 		assertEquals(cc.get("xixi"), "value2");
-		assertEquals(cc.getL("xixi"), "value2");
-		assertEquals(cc.getW("xixi"), "value2");
-		assertEquals(cc.getLW("xixi"), "value2");
+		assertEquals(xc.get("xixi"), "value2");
+		assertEquals(xc.get("xixi"), "value2");
+		assertEquals(xc.get("xixi"), "value2");
 		assertEquals(lc.getCacheCount(), 1);
 		assertEquals(526, lc.getCacheSize());
 		
 		Thread.sleep(2000);
 		
 		assertNull(cc.get("xixi"));
-		assertNull(lc.get(cc.getGroupID(), "xixi"));
-		assertNull(cc.getL("xixi"));
-		assertNull(cc.getW("xixi"));
-		assertNull(cc.getLW("xixi"));
+		assertNull(lc.get(cc.getGroupId(), "xixi"));
+		assertNull(xc.get("xixi"));
+		assertNull(xc.get("xixi"));
+		assertNull(xc.get("xixi"));
 		assertEquals(lc.getCacheCount(), 0);
 		assertEquals(lc.getCacheSize(), 0);
 		assertEquals(lc.getMaxCacheSize(), 1024 * 1024);
@@ -446,18 +450,19 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testGetTouchL() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("LocalCacheTest");
+		XixiClientManager mgr = XixiClientManager.getInstance("LocalCacheTest");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
 		cc.flush();
 		
 		long beginTime = CurrentTick.get();
 		cc.set("xixi", "session", 100);
-		CacheItem item = cc.getsL("xixi");
+		CacheItem item = xc.gets("xixi");
 		assertNotNull(item);
 		long d = item.getExpireTime() - beginTime;
 		assertEquals(100, d);
@@ -469,9 +474,9 @@ public class LocalCacheTest extends TestCase {
 		d = item.getExpiration();
 		assertEquals(98, d);
 		
-		item = cc.getAndTouchL("xixi", 100);
+		item = xc.getAndTouch("xixi", 100);
 		assertNotNull(item);
-		assertNull(lc.get(cc.getGroupID(), "xixi"));
+		assertNull(lc.get(cc.getGroupId(), "xixi"));
 		d = item.getExpiration();
 		assertEquals(100, d);
 	
@@ -486,18 +491,19 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testGetTouchL2() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("LocalCacheTest");
+		XixiClientManager mgr = XixiClientManager.getInstance("LocalCacheTest");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
 		cc.flush();
 		
 		long beginTime = CurrentTick.get();
 		cc.set("xixi", "session", 100);
-		CacheItem item = cc.getsW("xixi");
+		CacheItem item = xc.gets("xixi");
 		assertNotNull(item);
 		long d = item.getExpireTime() - beginTime;
 		assertEquals(100, d);
@@ -509,10 +515,10 @@ public class LocalCacheTest extends TestCase {
 		d = item.getExpiration();
 		assertEquals(98, d);
 		
-		item = cc.getAndTouchL("xixi", 100);
+		item = xc.getAndTouch("xixi", 100);
 		assertNotNull(item);
-		assertNotNull(lc.get(cc.getGroupID(), "xixi"));
-		assertNull(lc.getAndTouch("errHost", cc.getGroupID(), "xixi", 1));
+		assertNotNull(lc.get(cc.getGroupId(), "xixi"));
+		assertNull(lc.getAndTouch("errHost", cc.getGroupId(), "xixi", 1));
 		d = item.getExpiration();
 		assertEquals(100, d);
 	
@@ -527,18 +533,20 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testGetTouchW() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("LocalCacheTest");
+		XixiClientManager mgr = XixiClientManager.getInstance("LocalCacheTest");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
+
 		cc.flush();
 		
 		long beginTime = CurrentTick.get();
 		cc.set("xixi", "session", 100);
-		CacheItem item = cc.getsW("xixi");
+		CacheItem item = xc.gets("xixi");
 		assertNotNull(item);
 		long d = item.getExpireTime() - beginTime;
 		assertEquals(100, d);
@@ -550,12 +558,12 @@ public class LocalCacheTest extends TestCase {
 		d = item.getExpiration();
 		assertEquals(98, d);
 		
-		item = cc.getAndTouchW("xixi", 100);
+		item = xc.getAndTouch("xixi", 100);
 		assertNotNull(item);
 		d = item.getExpiration();
 		assertEquals(100, d);
 		
-		assertEquals(100, lc.get(cc.getGroupID(), "xixi").getExpiration());
+		assertEquals(100, lc.get(cc.getGroupId(), "xixi").getExpiration());
 	
 		Thread.sleep(50);
 		
@@ -568,18 +576,20 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testGetTouchLW() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("LocalCacheTest");
+		XixiClientManager mgr = XixiClientManager.getInstance("LocalCacheTest");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
+
 		cc.flush();
 		
 		long beginTime = CurrentTick.get();
 		cc.set("xixi", "session", 100);
-		CacheItem item = cc.getsW("xixi");
+		CacheItem item = xc.gets("xixi");
 		assertNotNull(item);
 		long d = item.getExpireTime() - beginTime;
 		assertEquals(100, d);
@@ -591,12 +601,12 @@ public class LocalCacheTest extends TestCase {
 		d = item.getExpiration();
 		assertEquals(98, d);
 		
-		item = cc.getAndTouchLW("xixi", 100);
+		item = xc.getAndTouch("xixi", 100);
 		assertNotNull(item);
 		d = item.getExpiration();
 		assertEquals(100, d);
 		
-		assertEquals(100, lc.get(cc.getGroupID(), "xixi").getExpiration());
+		assertEquals(100, lc.get(cc.getGroupId(), "xixi").getExpiration());
 	
 		Thread.sleep(50);
 		
@@ -609,18 +619,20 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testGetTouchLW2() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("LocalCacheTest");
+		XixiClientManager mgr = XixiClientManager.getInstance("LocalCacheTest");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
+
 		cc.flush();
 		
 		long beginTime = CurrentTick.get();
 		cc.set("xixi", "session", 3);
-		CacheItem item = cc.getsW("xixi");
+		CacheItem item = xc.gets("xixi");
 		assertNotNull(item);
 		long d = item.getExpireTime() - beginTime;
 		assertEquals(3, d);
@@ -632,12 +644,12 @@ public class LocalCacheTest extends TestCase {
 		d = item.getExpiration();
 		assertEquals(1, d);
 		
-		item = cc.getAndTouchLW("xixi", 0);
+		item = xc.getAndTouch("xixi", 0);
 		assertNotNull(item);
 		d = item.getExpiration();
 		assertEquals(0, d);
 		
-		assertEquals(0, lc.get(cc.getGroupID(), "xixi").getExpiration());
+		assertEquals(0, lc.get(cc.getGroupId(), "xixi").getExpiration());
 	
 		Thread.sleep(50);
 		
@@ -646,7 +658,7 @@ public class LocalCacheTest extends TestCase {
 		d = item.getExpiration();
 		assertEquals(0, d);
 	
-		item = cc.getAndTouchLW("xixi", 2);
+		item = xc.getAndTouch("xixi", 2);
 		assertNotNull(item);
 		d = item.getExpiration();
 		assertEquals(2, d);
@@ -661,25 +673,27 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testDropInactive() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("testDropInactive");
+		XixiClientManager mgr = XixiClientManager.getInstance("testDropInactive");
 		String[] serverlist = servers.split(",");
 		String[] serverlist2 = new String[1];
 		serverlist2[0] = serverlist[0];
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		mgr.getLocalCache().setMaxCacheSize(64 * 1024);
 		mgr.getLocalCache().setWarningCacheRate(0.5);
 		Thread.sleep(50);
 		LocalCache lc = mgr.getLocalCache();
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
+
 		cc.flush();
 		
 		cc.set("xixi", "0315");
-		assertEquals("0315", cc.getsW("xixi").getValue());
-		assertEquals("0315", cc.getsL("xixi").getValue());
+		assertEquals("0315", xc.gets("xixi").getValue());
+		assertEquals("0315", xc.gets("xixi").getValue());
 		assertEquals(1, lc.getCacheCount());
 		for (int i = 0; i < 100; i++) {
-			cc.setW("xixi" + i, "0315");
+			xc.set("xixi" + i, "0315");
 		}
 		assertEquals(39, lc.getCacheCount());
 
@@ -687,28 +701,30 @@ public class LocalCacheTest extends TestCase {
 	}
 	
 	public void testCacheUpdate() throws InterruptedException {
-		CacheClientManager mgr = CacheClientManager.getInstance("testDropInactive");
+		XixiClientManager mgr = XixiClientManager.getInstance("testDropInactive");
 		String[] serverlist = servers.split(",");
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		mgr.getLocalCache().setMaxCacheSize(64 * 1024);
 		mgr.getLocalCache().setWarningCacheRate(0.6);
 		Thread.sleep(50);
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		XixiClient xc = mgr.createXixiClient4LocalCache();
+
 		cc.flush();
 		
-		long cacheID = cc.setW("xixi", "0315");
+		long cacheID = xc.set("xixi", "0315");
 		assertTrue(cacheID != 0);
 		cc.set("xixi", "20080315");
-		CacheItem item = cc.getsW("xixi");
+		CacheItem item = xc.gets("xixi");
 		assertTrue(item.getCacheID() != cacheID);
 		cc.flush();
 
-		cacheID = cc.setW("xixi", "0315");
+		cacheID = xc.set("xixi", "0315");
 		assertTrue(cacheID != 0);
-		item = cc.getsL("xixi");
+		item = xc.gets("xixi");
 		cc.set("xixi", "20080315");
-		item = cc.getsW("xixi");
+		item = xc.gets("xixi");
 		assertTrue(item.getCacheID() != cacheID);
 
 		mgr.shutdown();

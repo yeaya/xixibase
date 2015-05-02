@@ -48,7 +48,8 @@ class TestCaseLocalCache1 implements RunableLocalCache {
 	public static final int OP_FLAG_GET_WATCH = 4;
 	public static final int OP_FLAG_UPDATE = 8;
 	public static final int OP_FLAG_WATCH = 16;
-	CacheClient cc = null;
+	XixiClient cc = null;
+	XixiClient xc = null;
 	long id = 0;
 	static int cacheItemCount = 0; 
 	static int updatepos = 0;
@@ -161,8 +162,9 @@ class TestCaseLocalCache1 implements RunableLocalCache {
 		}
 		this.operationType = operationType;
 		
-		CacheClientManager mgr = CacheClientManager.getInstance(mgrName);
-		cc = mgr.createClient();
+		XixiClientManager mgr = XixiClientManager.getInstance(mgrName);
+		cc = mgr.createXixiClient();
+		xc = mgr.createXixiClient4LocalCache();
 	}
 	public void run() {
 		if ((operationType & OP_FLAG_GET_LOCAL) == OP_FLAG_GET_LOCAL) {
@@ -190,7 +192,7 @@ class TestCaseLocalCache1 implements RunableLocalCache {
 
 		for (int i = 0; i < bachCount && readpos < updateFinishedPos; i++, readpos++) {
 			String mykey = key + readpos;
-			String value = (String)cc.getL(mykey);
+			String value = (String)xc.get(mykey);
 			if (value == null) {
 				notFoundCount++;
 				System.out.println("getCacheLocal id=" + id + " get error, key=" + mykey);
@@ -235,7 +237,7 @@ class TestCaseLocalCache1 implements RunableLocalCache {
 
 		for (int i = 0; i < bachCount && readpos < updateFinishedPos; i++, readpos++) {
 			String mykey = key + readpos;
-			String value = (String)cc.getLW(mykey);
+			String value = (String)xc.get(mykey);
 			if (value == null) {
 				notFoundCount++;
 				System.out.println("getCacheLocal id=" + id + " get error, key=" + mykey);
@@ -313,7 +315,7 @@ class TestCaseLocalCache1 implements RunableLocalCache {
 		for (int i = 0; i < count; i++, updatepos++) {
 			String mykey = key + updatepos;
 			String value = mykey + System.currentTimeMillis();
-			if (cc.setW(mykey, value) == 0) {
+			if (xc.set(mykey, value) == 0) {
 				System.out.println("updateCache id=" + id + " set error, key=" + mykey);
 				break;
 			}
@@ -327,7 +329,6 @@ class TestCaseLocalCache1 implements RunableLocalCache {
 }
 
 public class StressTestLocalCache {
-	protected static CacheClient cc = null;
 	private static String[] serverlist;
 
 	public static void main(String[] args) throws InterruptedException {
@@ -348,17 +349,19 @@ public class StressTestLocalCache {
 		serverlist = servers.split(",");
 
 		String pooName = "stresstestLocalCache";
-		CacheClientManager mgr = CacheClientManager.getInstance(pooName);
-		mgr.setSocketWriteBufferSize(64 * 1024);//(1 * 1024 * 1024);
+		XixiClientManager mgr = XixiClientManager.getInstance(pooName);
+		//mgr.setSocketWriteBufferSize(64 * 1024);//(1 * 1024 * 1024);
 		mgr.setInitConn(10);
 
 		mgr.setNoDelay(true);
 		mgr.initialize(serverlist, enableSSL);
-		mgr.enableLocalCache();
+	//	mgr.enableLocalCache();
 		LocalCache localCache = mgr.getLocalCache();
 		localCache.setMaxCacheSize(512 * 1024 * 1024);
 		
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
+		//xc = mgr.createXixiClient4LocalCache();
+
 		cc.flush();
 		Thread.sleep(500);
 		

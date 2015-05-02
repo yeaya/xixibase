@@ -20,22 +20,22 @@ import com.yeaya.xixibase.xixiclient.util.CurrentTick;
 
 public class CacheBaseItem {
 	protected String key;
-	protected long cacheID;
+	protected long cacheId;
 	protected long expireTime;
-	protected int groupID;
+	protected int groupId;
 	protected int flags;
 	protected int valueSize;
 
-	public CacheBaseItem(String key, long cacheID, int expiration,
-			int groupID, int flags, int valueSize) {
+	public CacheBaseItem(String key, long cacheId, int expiration,
+			int groupId, int flags, int valueSize) {
 		this.key = key;
-		this.cacheID = cacheID;
+		this.cacheId = cacheId;
 		if (expiration == Defines.NO_EXPIRATION) {
 			this.expireTime = Defines.NO_EXPIRATION;
 		} else {
 			this.expireTime = CurrentTick.get() + (expiration & 0xFFFFFFFFL) ;
 		}
-		this.groupID = groupID;
+		this.groupId = groupId;
 		this.flags = flags;
 		this.valueSize = valueSize;
 	}
@@ -45,7 +45,7 @@ public class CacheBaseItem {
 	}
 
 	public long getCacheID() {
-		return cacheID;
+		return cacheId;
 	}
 
 	protected void setExpiration(int expiration) {
@@ -72,7 +72,7 @@ public class CacheBaseItem {
 	}
 
 	public int getGroupID() {
-		return groupID;
+		return groupId;
 	}
 
 	public int getFlags() {

@@ -20,9 +20,9 @@ public final class CacheItem extends CacheBaseItem {
 	protected Object value;
 	protected int itemSize;
 
-	public CacheItem(String key, long cacheID, int expiration, int groupID, int flags,
+	public CacheItem(String key, long cacheID, int expiration, int groupId, int flags,
 			Object value, int objectSize, int valueSize) {
-		super(key, cacheID, expiration, groupID, flags, valueSize);
+		super(key, cacheID, expiration, groupId, flags, valueSize);
 		this.value = value;
 		this.itemSize = key.length() * 2 + objectSize + 512;
 	}

@@ -32,17 +32,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.yeaya.xixibase.xixiclient.AsyncHandle;
-import com.yeaya.xixibase.xixiclient.CacheClientManager;
+import com.yeaya.xixibase.xixiclient.XixiClientManager;
 import com.yeaya.xixibase.xixiclient.Defines;
 import com.yeaya.xixibase.xixiclient.LocalCache;
 import com.yeaya.xixibase.xixiclient.TransCoder;
-import com.yeaya.xixibase.xixiclient.XixiSocket;
+import com.yeaya.xixibase.xixiclient.network.SocketManager;
+import com.yeaya.xixibase.xixiclient.network.XixiSocket;
 
 public final class MultiDelete extends Defines {
 	final static Logger log = LoggerFactory.getLogger(MultiDelete.class);
 
-	private CacheClientManager manager;
-	private int groupID;
+	private XixiClientManager manager;
+	private SocketManager socketManager;
+	private int groupId;
 	private TransCoder transCoder;
 
 	private Selector selector;
@@ -52,9 +54,10 @@ public final class MultiDelete extends Defines {
 	private String lastError = null;
 	private LocalCache localCache = null;
 
-	public MultiDelete(CacheClientManager manager, int groupID, TransCoder transCoder) {
+	public MultiDelete(XixiClientManager manager, SocketManager socketManager, int groupId, TransCoder transCoder) {
 		this.manager = manager;
-		this.groupID = groupID;
+		this.socketManager = socketManager;
+		this.groupId = groupId;
 		this.transCoder = transCoder;
 		this.localCache = manager.getLocalCache();
 	}
@@ -102,7 +105,7 @@ public final class MultiDelete extends Defines {
 					continue;
 				}
 
-				String host = manager.getHost(item.key);
+				String host = socketManager.getHost(item.key);
 				if (host == null) {
 					lastError = "multiDelete, can not get host with the key";
 					log.error(lastError);
@@ -117,14 +120,14 @@ public final class MultiDelete extends Defines {
 				conn.add(item, keyBuf, keyIndex);
 			}
 
-			selector = manager.selectorOpen();
+			selector = socketManager.selectorOpen();
 
 			Iterator<Entry<String, Connection>> itc = conns.entrySet().iterator();
 			while (itc.hasNext()) {
 				Entry<String, Connection> e = itc.next();
 				String host = e.getKey();
 				Connection conn = e.getValue();
-				XixiSocket socket = manager.getSocketByHost(host);
+				XixiSocket socket = socketManager.getSocketByHost(host);
 
 				if (socket != null) {
 					conn.init(socket);
@@ -160,7 +163,7 @@ public final class MultiDelete extends Defines {
 			e.printStackTrace();
 		} finally {
 			try {
-				manager.selectorClose(selector);
+				socketManager.selectorClose(selector);
 			} catch (IOException e) {
 				lastError = "multiDelete, close selector exception :" + e;
 				log.error(lastError);
@@ -229,7 +232,7 @@ public final class MultiDelete extends Defines {
 			outBuffer.put(XIXI_TYPE_DELETE_REQ);
 			outBuffer.put(opFlag);
 			outBuffer.putLong(item.cacheID);//uint64_t cacheID;
-			outBuffer.putInt(groupID);
+			outBuffer.putInt(groupId);
 			outBuffer.putShort((short) keyBuf.length); // uint16_t key_length;
 			outBuffer.put(keyBuf);
 
@@ -248,7 +251,7 @@ public final class MultiDelete extends Defines {
 				outBuffer.put(XIXI_TYPE_DELETE_REQ);
 				outBuffer.put(opFlag);
 				outBuffer.putLong(item.cacheID);//uint64_t cacheID;
-				outBuffer.putInt(groupID);
+				outBuffer.putInt(groupId);
 				outBuffer.putShort((short) keyBuf.length); // uint16_t key_length;
 				outBuffer.put(keyBuf);
 				currKeyIndex++;
@@ -328,7 +331,7 @@ public final class MultiDelete extends Defines {
 						byte type = header.get();
 						if (category == XIXI_CATEGORY_CACHE && type == XIXI_TYPE_DELETE_RES) {
 							MultiDeleteItem deleteItem = items.get(processedCount); 
-							localCache.remove(socket.getHost(), groupID, deleteItem.key);
+							localCache.remove(socket.getHost(), groupId, deleteItem.key);
 							deleteItem.reason = XIXI_REASON_SUCCESS;
 							processedCount++;
 							successCount.getAndIncrement();

@@ -16,8 +16,8 @@ limitations under the License.
 
 package com.yeaya.xixibase.xixiclient.example;
 
-import com.yeaya.xixibase.xixiclient.CacheClient;
-import com.yeaya.xixibase.xixiclient.CacheClientManager;
+import com.yeaya.xixibase.xixiclient.XixiClientManager;
+import com.yeaya.xixibase.xixiclient.XixiClient;
 
 public class LocalCache  {
 
@@ -29,13 +29,13 @@ public class LocalCache  {
 
 		String[] serverlist = servers.split(",");
 
-		CacheClientManager manager = CacheClientManager.getInstance("example");
+		XixiClientManager manager = XixiClientManager.getInstance("example");
 		manager.initialize(serverlist, false);
 		
 		// enable local cache
-		manager.enableLocalCache();
+	//	manager.enableLocalCache();
 		
-		CacheClient cc = manager.createClient();
+		XixiClient cc = manager.createXixiClient4LocalCache();
 
 		cc.set("key", "value1");
 		
@@ -45,28 +45,23 @@ public class LocalCache  {
 		// get the object from remote Xixibase server
 		// and watch the change of the object
 		// and save this object into local cache 
-		System.out.println(cc.getW("key"));
-		
-		// try to get the object from local cache
-		// if the object is not exist in local cache
-		//     get the object from remote Xixibase server
-		System.out.println(cc.getL("key"));
-		
+		System.out.println(cc.get("key"));
+
 		// try to get the object from local cache
 		// if the object is not exist in local cache
 		//     get the object from remote Xixibase server
 		//     and watch the change of the object
 		//     and save this object into local cache 
-		System.out.println(cc.getLW("key")); 
+		System.out.println(cc.get("key")); 
 
 		cc.flush();
 		
 		// set object to remote Xixibase server
 		// and watch the change of the object
 		// and save this object into local cache
-		cc.setW("key", "value2");
+		cc.set("key", "value2");
 		
-		System.out.println(cc.getL("key"));
+		System.out.println(cc.get("key"));
 		
 		cc.flush();
 

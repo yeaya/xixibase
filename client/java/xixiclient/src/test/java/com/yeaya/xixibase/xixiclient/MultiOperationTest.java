@@ -31,8 +31,8 @@ import junit.framework.TestCase;
 
 public class MultiOperationTest extends TestCase {
 	private static final String managerName1 = "MultiOperationTest";
-	private static CacheClient cc1 = null;
-	private static CacheClientManager mgr1 = null;
+	private static XixiClient cc1 = null;
+	private static XixiClientManager mgr1 = null;
 
 	static String servers;
 	static boolean enableSSL = false;
@@ -53,15 +53,15 @@ public class MultiOperationTest extends TestCase {
 		}
 		String[] serverlist = servers.split(",");
 
-		mgr1 = CacheClientManager.getInstance(managerName1);
-		mgr1.setSocketWriteBufferSize(64 * 1024);
+		mgr1 = XixiClientManager.getInstance(managerName1);
+		mgr1.socketManager.setSocketWriteBufferSize(64 * 1024);
 		mgr1.initialize(serverlist, enableSSL);
-		mgr1.enableLocalCache();
+	//	mgr1.enableLocalCache();
 	}
 
 	protected void setUp() throws Exception {
 		super.setUp();
-		cc1 = mgr1.createClient();
+		cc1 = mgr1.createXixiClient();
 	}
 
 	protected void tearDown() throws Exception {
@@ -295,7 +295,7 @@ public class MultiOperationTest extends TestCase {
 		for (int i = 0; i < max; i++) {
 			CacheItem item = results.get(i);
 			assertEquals(item.getValue(), "prepend" + values.get(i));
-			assertTrue(item.cacheID != multi.get(i).cacheID);
+			assertTrue(item.cacheId != multi.get(i).cacheID);
 		}
 	}
 

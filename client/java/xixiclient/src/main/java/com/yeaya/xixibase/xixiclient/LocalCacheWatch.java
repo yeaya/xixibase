@@ -71,7 +71,7 @@ class GroupItem {
 //		}
 	//	while (!list.isEmpty()) {
 		//	CacheItem item = list.pop();
-			CacheItem item2 = cacheIDMap.remove(new Long(item.cacheID));
+			CacheItem item2 = cacheIDMap.remove(new Long(item.cacheId));
 			if (item2 != null) {
 				item = inactiveCacheMap.remove(item2.key);
 				if (item != null) {
@@ -92,7 +92,7 @@ class GroupItem {
 		activeCacheMap.clear();
 	}
 	
-	public CacheItem get(int groupID, String key) {
+	public CacheItem get(int groupId, String key) {
 		CacheItem item = activeCacheMap.get(key);
 		if (item != null) {
 			return item;
@@ -111,18 +111,18 @@ class GroupItem {
 		if (oldItem != null) {
 			cacheSize.addAndGet(-oldItem.itemSize);
 			cacheCount.getAndDecrement();
-			cacheIDMap.remove(new Long(oldItem.cacheID));
+			cacheIDMap.remove(new Long(oldItem.cacheId));
 		} else {
 			oldItem = activeCacheMap.remove(key);
 			if (oldItem != null) {
 				cacheSize.addAndGet(-oldItem.itemSize);
 				cacheCount.getAndDecrement();
-				cacheIDMap.remove(new Long(oldItem.cacheID));
+				cacheIDMap.remove(new Long(oldItem.cacheId));
 			}
 		}
 		cacheSize.addAndGet(value.itemSize);
 		cacheCount.getAndIncrement();
-		cacheIDMap.put(new Long(value.cacheID), value);
+		cacheIDMap.put(new Long(value.cacheId), value);
 	}
 
 	public synchronized CacheItem remove(String key) {
@@ -130,13 +130,13 @@ class GroupItem {
 		if (item != null) {
 			cacheSize.addAndGet(-item.itemSize);
 			cacheCount.getAndDecrement();
-			cacheIDMap.remove(new Long(item.cacheID));
+			cacheIDMap.remove(new Long(item.cacheId));
 		} else {
 			item = inactiveCacheMap.remove(key);
 			if (item != null) {
 				cacheSize.addAndGet(-item.itemSize);
 				cacheCount.getAndDecrement();
-				cacheIDMap.remove(new Long(item.cacheID));
+				cacheIDMap.remove(new Long(item.cacheId));
 			}
 		}
 		return item;
@@ -169,7 +169,7 @@ class LocalCacheWatch extends Thread {
 	final static Logger log = LoggerFactory.getLogger(LocalCacheWatch.class);
 	
 	private String host;
-	private CacheClientManager manager;
+	private XixiClientManager manager;
 	private int watchID = 0;
 	private boolean runFlag = false;
 	private ConcurrentHashMap<Integer, GroupItem> groupMap = new ConcurrentHashMap<Integer, GroupItem>();
@@ -179,10 +179,10 @@ class LocalCacheWatch extends Thread {
 	private int ackSequence = 0;
 	private int checkTimeout = 3;
 	private int maxNextCheckInterval = 600;
-	private CacheClientImpl cc = null;
+	private Protocol cc = null;
 	private LocalCacheTouch cacheTouch = null;
 
-	public LocalCacheWatch(String host, CacheClientManager manager,
+	public LocalCacheWatch(String host, XixiClientManager manager,
 			AtomicLong cacheSize, AtomicInteger cacheCount) {
 		this.host = host;
 		this.manager = manager;
@@ -196,7 +196,7 @@ class LocalCacheWatch extends Thread {
 	
 	public void init() {
 		runFlag = true;
-		cc = new CacheClientImpl(manager, manager.getDefaultGroupID());
+		cc = new Protocol(manager, manager.socketManager, manager.getDefaultGroupId(), false);
 		cacheTouch = new LocalCacheTouch(manager);
 		this.start();
 		cacheTouch.start();
@@ -226,16 +226,16 @@ class LocalCacheWatch extends Thread {
 		}
 	}
 
-	public CacheItem get(int groupID, String key) {
-		GroupItem gitem = groupMap.get(Integer.valueOf(groupID));
+	public CacheItem get(int groupId, String key) {
+		GroupItem gitem = groupMap.get(Integer.valueOf(groupId));
 		if (gitem != null) {
-			return gitem.get(groupID, key);
+			return gitem.get(groupId, key);
 		}
 		return null;
 	}
 	
-	public CacheItem getAndTouch(int groupID, String key, int expiration) {
-		CacheItem item = get(groupID, key);
+	public CacheItem getAndTouch(int groupId, String key, int expiration) {
+		CacheItem item = get(groupId, key);
 		if (item != null) {
 			cacheTouch.touch(key, item, expiration);
 		}
@@ -243,26 +243,26 @@ class LocalCacheWatch extends Thread {
 	}
 
 	public synchronized void put(String key, CacheItem item) {
-		GroupItem gitem = groupMap.get(Integer.valueOf(item.groupID));
+		GroupItem gitem = groupMap.get(Integer.valueOf(item.groupId));
 		if (gitem != null) {
 			gitem.put(key, item);
 		} else {
 			gitem = new GroupItem(cacheSize, cacheCount, cacheIDMap);
-			groupMap.put(Integer.valueOf(item.groupID), gitem);
+			groupMap.put(Integer.valueOf(item.groupId), gitem);
 			gitem.put(key, item);
 		}
 	}
 
-	public synchronized CacheItem remove(int groupID, String key) {
-		GroupItem gitem = groupMap.get(Integer.valueOf(groupID));
+	public synchronized CacheItem remove(int groupId, String key) {
+		GroupItem gitem = groupMap.get(Integer.valueOf(groupId));
 		if (gitem != null) {
 			return gitem.remove(key);
 		}
 		return null;
 	}
 	
-	public synchronized void flush(int groupID) {
-		GroupItem gitem = groupMap.get(Integer.valueOf(groupID));
+	public synchronized void flush(int groupId) {
+		GroupItem gitem = groupMap.get(Integer.valueOf(groupId));
 		if (gitem != null) {
 			gitem.clear();
 		}
@@ -274,7 +274,7 @@ class LocalCacheWatch extends Thread {
 			Long cacheID = new Long(wr.cacheIDs[i]);
 			CacheItem it = cacheIDMap.remove(cacheID);
 			if (it != null) {
-				GroupItem gitem = groupMap.get(it.groupID);
+				GroupItem gitem = groupMap.get(it.groupId);
 				if (gitem != null) {
 					gitem.update(it);
 				}
@@ -329,10 +329,10 @@ class LocalCacheWatch extends Thread {
 
 class LocalCacheTouch extends Thread {
 	private ConcurrentHashMap<String, CacheItem> touchMap = new ConcurrentHashMap<String, CacheItem>();
-	private CacheClientImpl cc = null;
+	private Protocol cc = null;
 	private boolean runFlag = false;
-	LocalCacheTouch(CacheClientManager manager) {
-		cc = new CacheClientImpl(manager, manager.getDefaultGroupID());
+	LocalCacheTouch(XixiClientManager manager) {
+		cc = new Protocol(manager, manager.socketManager, manager.getDefaultGroupId(), false);
 	}
 	
 	public void shutdown() {
@@ -358,7 +358,7 @@ class LocalCacheTouch extends Thread {
 					MultiUpdateExpirationItem mitem = new MultiUpdateExpirationItem();
 					lists.add(mitem);
 					mitem.key = key;
-					mitem.cacheID = item.cacheID;
+					mitem.cacheID = item.cacheId;
 					mitem.expiration = (int)expiration;
 				}
 			}

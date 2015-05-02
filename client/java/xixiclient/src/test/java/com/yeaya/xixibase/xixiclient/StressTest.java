@@ -48,7 +48,7 @@ class TestWork extends Thread {
 }
 
 class TestCase1 implements Runable {
-	CacheClient cc = null;
+	XixiClient cc = null;
 	long id = 0;
 	int keyCount = 0; 
 	int maxSetCount = 0;
@@ -94,8 +94,8 @@ class TestCase1 implements Runable {
 		this.maxGetCount = maxGetCount;
 		
 		String mgrName = "stresstest";
-		CacheClientManager mgr = CacheClientManager.getInstance(mgrName);
-		cc = mgr.createClient();
+		XixiClientManager mgr = XixiClientManager.getInstance(mgrName);
+		cc = mgr.createXixiClient();
 	}
 	
 	public boolean run() {
@@ -181,14 +181,14 @@ public class StressTest {
 				+ " maxSetCount=" + maxSetCount + " maxGetCount=" + maxGetCount);
 		String[] serverlist = servers.split(",");
 
-		CacheClientManager mgr = CacheClientManager.getInstance("stresstest");
+		XixiClientManager mgr = XixiClientManager.getInstance("stresstest");
 
 		mgr.setInitConn(10);
 
 		mgr.setNoDelay(true);
 		mgr.initialize(serverlist, enableSSL);
 		
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
 		cc.flush();
 		
 		ArrayList<TestWork> worklist = new ArrayList<TestWork>();

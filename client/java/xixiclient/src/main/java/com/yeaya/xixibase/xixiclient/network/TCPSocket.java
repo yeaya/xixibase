@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-package com.yeaya.xixibase.xixiclient;
+package com.yeaya.xixibase.xixiclient.network;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -26,8 +26,11 @@ import java.nio.channels.SelectableChannel;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
+import com.yeaya.xixibase.xixiclient.AsyncHandle;
+import com.yeaya.xixibase.xixiclient.ObjectTransCoder;
+
 public class TCPSocket implements XixiSocket {
-	private CacheClientManager manager;
+	private SocketManager manager;
 	private String host;
 	private Socket socket;
 	private java.nio.channels.SocketChannel socketChannel;
@@ -35,7 +38,7 @@ public class TCPSocket implements XixiSocket {
 	private ByteBuffer writeBuffer;
 	private long lastActiveTime;
 
-	public TCPSocket(CacheClientManager manager, String host, int writeBufferSize, int timeout,
+	public TCPSocket(SocketManager manager, String host, int writeBufferSize, int timeout,
 			int connectTimeout, boolean noDelay) throws IOException, UnknownHostException {
 
 		this.manager = manager;

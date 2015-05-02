@@ -32,17 +32,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.yeaya.xixibase.xixiclient.AsyncHandle;
-import com.yeaya.xixibase.xixiclient.CacheClientManager;
+import com.yeaya.xixibase.xixiclient.XixiClientManager;
 import com.yeaya.xixibase.xixiclient.Defines;
 import com.yeaya.xixibase.xixiclient.LocalCache;
 import com.yeaya.xixibase.xixiclient.TransCoder;
-import com.yeaya.xixibase.xixiclient.XixiSocket;
+import com.yeaya.xixibase.xixiclient.network.SocketManager;
+import com.yeaya.xixibase.xixiclient.network.XixiSocket;
 
 public final class MultiUpdateExpiration extends Defines {
 	final static Logger log = LoggerFactory.getLogger(MultiUpdateExpiration.class);
 
-	private CacheClientManager manager;
-	private int groupID;
+	private XixiClientManager manager;
+	private SocketManager socketManager;
+	private int groupId;
 	private TransCoder transCoder;
 	
 	private Selector selector;
@@ -52,9 +54,10 @@ public final class MultiUpdateExpiration extends Defines {
 	private String lastError = null;
 	private LocalCache localCache = null;
 	
-	public MultiUpdateExpiration(CacheClientManager manager, int groupID, TransCoder transCoder) {
+	public MultiUpdateExpiration(XixiClientManager manager, SocketManager socketManager, int groupId, TransCoder transCoder) {
 		this.manager = manager;
-		this.groupID = groupID;
+		this.socketManager = socketManager;
+		this.groupId = groupId;
 		this.transCoder = transCoder;
 		this.localCache = manager.getLocalCache();
 	}
@@ -103,7 +106,7 @@ public final class MultiUpdateExpiration extends Defines {
 					continue;
 				}
 
-				String host = manager.getHost(item.key);
+				String host = socketManager.getHost(item.key);
 				if (host == null) {
 					lastError = "multiUpdateExpiration, can not get host with the key";
 					log.error(lastError);
@@ -118,14 +121,14 @@ public final class MultiUpdateExpiration extends Defines {
 				conn.add(item, keyBuf, keyIndex);
 			}
 
-			selector = manager.selectorOpen();
+			selector = socketManager.selectorOpen();
 
 			Iterator<Entry<String, Connection>> itc = conns.entrySet().iterator();
 			while (itc.hasNext()) {
 				Entry<String, Connection> e = itc.next();
 				String host = e.getKey();
 				Connection conn = e.getValue();
-				XixiSocket socket = manager.getSocketByHost(host);
+				XixiSocket socket = socketManager.getSocketByHost(host);
 
 				if (socket != null) {
 					conn.init(socket);
@@ -161,7 +164,7 @@ public final class MultiUpdateExpiration extends Defines {
 			e.printStackTrace();
 		} finally {
 			try {
-				manager.selectorClose(selector);
+				socketManager.selectorClose(selector);
 			} catch (IOException e) {
 				lastError = "multiUpdateExpiration, close selector exception :" + e;
 				log.error(lastError);
@@ -232,7 +235,7 @@ public final class MultiUpdateExpiration extends Defines {
 			outBuffer.put(XIXI_TYPE_UPDATE_EXPIRATION_REQ);
 			outBuffer.put(opFlag);
 			outBuffer.putLong(item.cacheID);//uint64_t cacheID;
-			outBuffer.putInt(groupID);
+			outBuffer.putInt(groupId);
 			outBuffer.putInt(item.expiration);//			uint32_t expiration;
 			outBuffer.putShort((short) keyBuf.length); // uint16_t key_length;
 			outBuffer.put(keyBuf);
@@ -251,7 +254,7 @@ public final class MultiUpdateExpiration extends Defines {
 				outBuffer.put(XIXI_TYPE_UPDATE_EXPIRATION_REQ);
 				outBuffer.put(opFlag);
 				outBuffer.putLong(item.cacheID);//uint64_t cacheID;
-				outBuffer.putInt(groupID);
+				outBuffer.putInt(groupId);
 				outBuffer.putInt(item.expiration);//			uint32_t expiration;
 				outBuffer.putShort((short) keyBuf.length); // uint16_t key_length;
 				outBuffer.put(keyBuf);
@@ -369,7 +372,7 @@ public final class MultiUpdateExpiration extends Defines {
 						error_res.flip();
 						short reason = error_res.getShort();
 						MultiUpdateExpirationItem item = items.get(decode_count); 
-						localCache.remove(socket.getHost(), groupID, item.key);
+						localCache.remove(socket.getHost(), groupId, item.key);
 						item.reason = reason;
 						decode_count++;
 

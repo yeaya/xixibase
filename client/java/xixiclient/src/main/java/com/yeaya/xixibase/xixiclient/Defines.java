@@ -1,5 +1,5 @@
 /*
-   Copyright [2011] [Yao Yuan(yeaya@163.com)]
+   Copyright [2011-2015] [Yao Yuan(yeaya@163.com)]
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,11 +17,6 @@
 package com.yeaya.xixibase.xixiclient;
 
 public class Defines {
-	// Get flag
-	public static final int LOCAL_CACHE = 1;
-	public static final int WATCH_CACHE = 2;
-	public static final int TOUCH_CACHE = 4;
-	
 	public static final int NO_EXPIRATION = 0;
 	public static final long NO_CAS = 0;
 	public static final int NO_WATCH = 0;

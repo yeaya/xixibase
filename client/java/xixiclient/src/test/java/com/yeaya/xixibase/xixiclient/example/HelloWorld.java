@@ -16,8 +16,8 @@ limitations under the License.
 
 package com.yeaya.xixibase.xixiclient.example;
 
-import com.yeaya.xixibase.xixiclient.CacheClient;
-import com.yeaya.xixibase.xixiclient.CacheClientManager;
+import com.yeaya.xixibase.xixiclient.XixiClientManager;
+import com.yeaya.xixibase.xixiclient.XixiClient;
 
 public class HelloWorld  {
 
@@ -29,10 +29,10 @@ public class HelloWorld  {
 
 		String[] serverlist = servers.split(",");
 
-		CacheClientManager manager = CacheClientManager.getInstance("example");
+		XixiClientManager manager = XixiClientManager.getInstance("example");
 		manager.initialize(serverlist, false);
 		
-		CacheClient cc = manager.createClient();
+		XixiClient cc = manager.createXixiClient();
 		
 		cc.set("xixi", "Hello World!");
 		String value = (String)cc.get("xixi");

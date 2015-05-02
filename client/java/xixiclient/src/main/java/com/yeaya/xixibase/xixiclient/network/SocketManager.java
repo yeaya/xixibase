@@ -1,5 +1,5 @@
 /*
-   Copyright [2011] [Yao Yuan(yeaya@163.com)]
+   Copyright [2015] [Yao Yuan(yeaya@163.com)]
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,19 +14,22 @@
    limitations under the License.
 */
 
-package com.yeaya.xixibase.xixiclient;
+package com.yeaya.xixibase.xixiclient.network;
 
 import java.io.IOException;
 import java.nio.channels.Selector;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.HashMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.yeaya.xixibase.xixiclient.XixiWeightMap;
+import com.yeaya.xixibase.xixiclient.network.SSLSocket;
+import com.yeaya.xixibase.xixiclient.network.TCPSocket;
+import com.yeaya.xixibase.xixiclient.network.XixiSocket;
 import com.yeaya.xixibase.xixiclient.util.WeightMap;
 
 /**
@@ -35,9 +38,8 @@ import com.yeaya.xixibase.xixiclient.util.WeightMap;
  * @author Yao Yuan
  *
  */
-public class CacheClientManager {
-	final static Logger log = LoggerFactory.getLogger(CacheClientManager.class);
-	private static ConcurrentHashMap<String, CacheClientManager> managers = new ConcurrentHashMap<String, CacheClientManager>();
+public class SocketManager {
+	final static Logger log = LoggerFactory.getLogger(SocketManager.class);
 
 	private volatile boolean initialized = false;
 	private int defaultGroupID = 0;
@@ -64,66 +66,25 @@ public class CacheClientManager {
 	private long lastSelectorOpenTime = 0;
 
 	private int socketWriteBufferSize = 32768; // 32K, 65536; //64K
-	private LocalCache localCache = null;
-	private String name;
 	private MaintainThread maintainThread;
 
 	/**
 	 * Creates a <tt>CacheClientManager</tt>.
 	 * @param name the name of CacheClientManager.
 	 */
-	protected CacheClientManager(String name) {
-		this.name = name;
-		localCache = new LocalCache(this, 64 * 1024 * 1024);
-	}
-	
-	/**
-	 * Get the name of CacheClientManager.
-	 * @return the name of CacheClientManager
-	 */
-	public String getName() {
-		return name;
+	public SocketManager() {
 	}
 
 	/**
-	 * Get the instance of the name. If the instance does not exist, then create an instance.
-	 * @param name the name of CacheClientManager instance.
-	 * @return the instance of the name
-	 */
-	public static CacheClientManager getInstance(String name) {
-		CacheClientManager manager = managers.get(name);
-
-		if (manager == null) {
-			synchronized (CacheClientManager.class) {
-				manager = managers.get(name);
-				if (manager == null) {
-					manager = new CacheClientManager(name);
-					managers.put(name, manager);
-				}
-			}
-		}
-
-		return manager;
-	}
-
-	/**
-	 * Get the instance of the default name "default". If the instance does not exist, then create an instance.
-	 * @return the instance of the name "default"
-	 */
-	public static CacheClientManager getInstance() {
-		return getInstance("default");
-	}
-	
-	/**
-	 * Get default groupID.
-	 * @return default groupID
+	 * Get default groupId.
+	 * @return default groupId
 	 */
 	public int getDefaultGroupID() {
 		return defaultGroupID;
 	}
 
 	/**
-	 * Set default groupID.
+	 * Set default groupId.
 	 * @param defaultGroupID
 	 */
 	public void setDefaultGroupID(int defaultGroupID) {
@@ -272,7 +233,7 @@ public class CacheClientManager {
 			return false;
 		}
 		if (initialized) {
-			log.error("initialize, the manager: " + name + " was already initialized");
+			log.error("initialize, the manager: was already initialized");
 			return false;
 		}
 
@@ -315,9 +276,7 @@ public class CacheClientManager {
 	 */
 	public void shutdown() {
 		initialized = false;
-		managers.remove(name);
 
-		disableLocalCache();
 		closeSocketPool();
 		closeSelectorPool();
 
@@ -364,32 +323,14 @@ public class CacheClientManager {
 	/**
 	 * Enable local cache feature.
 	 */
-	public void enableLocalCache() {
-		localCache.start();
-	}
 
-	/**
-	 * Disable local cache feature.
-	 */
-	public void disableLocalCache() {
-		localCache.stop();
-	}
-	
-	/**
-	 * Get local cache object.
-	 * 
-     * @return local cache object
-	 */
-	public LocalCache getLocalCache() {
-		return localCache;
-	}
 
 	/**
 	 * Is this instance initialized?
 	 * 
 	 * @return <tt>true</tt> if this instance is initialized
 	 */
-	public final boolean isInitialized() {
+	public boolean isInitialized() {
 		return initialized;
 	}
 
@@ -407,7 +348,7 @@ public class CacheClientManager {
 	 * 
 	 * @param initConn the initial number of connections
 	 */
-	public final void setInitConn(int initConn) {
+	public void setInitConn(int initConn) {
 		this.initConn = initConn;
 	}
 
@@ -416,7 +357,7 @@ public class CacheClientManager {
 	 * 
      * @return the initial number of connections
 	 */
-	public final int getInitConn() {
+	public int getInitConn() {
 		return this.initConn;
 	}
 
@@ -425,7 +366,7 @@ public class CacheClientManager {
 	 * 
 	 * @param maxBusyTime max busy time(millisecond)
 	 */
-	public final void setMaxBusyTime(long maxBusyTime) {
+	public void setMaxBusyTime(long maxBusyTime) {
 		this.maxBusyTime = maxBusyTime;
 	}
 
@@ -434,7 +375,7 @@ public class CacheClientManager {
 	 * 
      * @return max busy time(millisecond)
 	 */
-	public final long getMaxBusyTime() {
+	public long getMaxBusyTime() {
 		return this.maxBusyTime;
 	}
 
@@ -443,7 +384,7 @@ public class CacheClientManager {
 	 * 
 	 * @param socketTimeout socket timeout(millisecond)
 	 */
-	public final void setSocketTimeout(int socketTimeout) {
+	public void setSocketTimeout(int socketTimeout) {
 		this.socketTimeout = socketTimeout;
 	}
 
@@ -452,7 +393,7 @@ public class CacheClientManager {
 	 * 
      * @return socket timeout(millisecond).
 	 */
-	public final int getSocketTimeout() {
+	public int getSocketTimeout() {
 		return this.socketTimeout;
 	}
 
@@ -461,7 +402,7 @@ public class CacheClientManager {
 	 * 
 	 * @param socketConnectTimeout socket connect timeout(millisecond)
 	 */
-	public final void setSocketConnectTimeout(int socketConnectTimeout) {
+	public void setSocketConnectTimeout(int socketConnectTimeout) {
 		this.socketConnectTimeout = socketConnectTimeout;
 	}
 
@@ -470,7 +411,7 @@ public class CacheClientManager {
 	 * 
      * @return socket connect timeout(millisecond).
 	 */
-	public final int getSocketConnectTimeout() {
+	public int getSocketConnectTimeout() {
 		return this.socketConnectTimeout;
 	}
 
@@ -479,7 +420,7 @@ public class CacheClientManager {
 	 * 
 	 * @param noDelay <tt>true</tt> Enable socket NoDelay
 	 */
-	public final void setNoDelay(boolean noDelay) {
+	public void setNoDelay(boolean noDelay) {
 		this.noDelay = noDelay;
 	}
 
@@ -488,7 +429,7 @@ public class CacheClientManager {
 	 * 
      * @return <tt>true</tt> If enable socket NoDelay.
 	 */
-	public final boolean isNoDelay() {
+	public boolean isNoDelay() {
 		return this.noDelay;
 	}
 
@@ -536,33 +477,33 @@ public class CacheClientManager {
 	public int getSocketWriteBufferSize() {
 		return socketWriteBufferSize;
 	}
-
-	/**
-	 * Create one client with default groupID.
-	 * 
-     * @return created client
-	 */
-	public CacheClient createClient() {
-		return new CacheClient(this, defaultGroupID);
-	}
 	
 	/**
-	 * Create one client with specified groupID.
+	 * Create one client with default groupId.
 	 * 
-	 * @param groupID specified groupID
      * @return created client
 	 */
-	public CacheClient createClient(int groupID) {
-		return new CacheClient(this, groupID);
-	}
-
+//	public CacheClient createClient() {
+//		return new CacheClient(this, defaultGroupID);
+//	}
+	
+	/**
+	 * Create one client with specified groupId.
+	 * 
+	 * @param groupId specified groupId
+     * @return created client
+	 */
+//	public CacheClient createClient(int groupId) {
+//		return new CacheClient(this, groupId);
+//	}
+	
 	/**
 	 * Create one socket with specified host.
 	 * 
 	 * @param host specified host
      * @return created socket
 	 */
-	protected final XixiSocket createSocket(String host) {
+	public XixiSocket createSocket(String host) {
 		if (initialized) {
 			try {
 				if (enableSSL) {
@@ -587,7 +528,7 @@ public class CacheClientManager {
 	 * @param key specified key
      * @return host
 	 */
-	public final String getHost(String key) {
+	public String getHost(String key) {
 //		if (!this.initialized) {
 //			log.error("getHost, manager is not initialized.");
 //			return null;
@@ -607,7 +548,7 @@ public class CacheClientManager {
 	 * @param key specified key
      * @return socket
 	 */
-	public final XixiSocket getSocket(String key) {
+	public XixiSocket getSocket(String key) {
 //		if (!this.initialized) {
 //			log.error("getSocket, manager is not initialized");
 //			return null;
@@ -637,7 +578,7 @@ public class CacheClientManager {
 	 * @param host specified host
      * @return socket
 	 */
-	public final XixiSocket getSocketByHost(String host) {
+	public XixiSocket getSocketByHost(String host) {
 //		if (!this.initialized) {
 //			log.error("getSocketByHost, manager is not initialized");
 //			return null;
@@ -671,7 +612,7 @@ public class CacheClientManager {
 	 * @param socket
      * @return <tt>true</tt> if the socket added
 	 */
-	protected final boolean addSocket(XixiSocket socket) {
+	protected boolean addSocket(XixiSocket socket) {
 		if (initialized) {
 			ArrayList<ConcurrentLinkedQueue<XixiSocket>> activePool = activeSocketPool;
 			if (activePool != null) {
@@ -697,7 +638,7 @@ public class CacheClientManager {
 	/**
 	 * Close socket pool.
 	 */
-	protected final void closeSocketPool() {
+	protected void closeSocketPool() {
 		for (int i = 0; i < activeSocketPool.size(); i++) {
 			ConcurrentLinkedQueue<XixiSocket> sockets = activeSocketPool.get(i);
 			XixiSocket socket = sockets.poll();
@@ -773,7 +714,7 @@ public class CacheClientManager {
 	/**
 	 * Maintain inactive socket
 	 */
-	protected final void maintainInactiveSocket(long currTime) {
+	protected void maintainInactiveSocket(long currTime) {
 		synchronized (inactiveSocketPool) {
 			for (int i = 0; i < inactiveSocketPool.size(); i++) {
 				LinkedList<XixiSocket> list = inactiveSocketPool.get(i);
@@ -801,7 +742,7 @@ public class CacheClientManager {
 	/**
 	 * Maintain selector pool
 	 */
-	protected final void maintainSelectorPool(long currTime) {
+	protected void maintainSelectorPool(long currTime) {
 		if (currTime > lastSelectorOpenTime + 5000) {
 			lastSelectorOpenTime = currTime;
 			Selector selector = selectorPool.poll();

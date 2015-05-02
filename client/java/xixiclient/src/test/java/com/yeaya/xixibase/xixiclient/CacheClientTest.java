@@ -24,8 +24,8 @@ public class CacheClientTest extends TestCase {
 	final static Logger log = LoggerFactory.getLogger(CacheClientTest.class);
 
 	private static final String managerName1 = "manager1";
-	private static CacheClientManager mgr1 = null;
-	private static CacheClient cc1 = null;
+	private static XixiClientManager mgr1 = null;
+	private static XixiClient cc1 = null;
 	
 	static String servers;
 	static String[] serverlist;
@@ -47,16 +47,16 @@ public class CacheClientTest extends TestCase {
 		}
 		serverlist = servers.split(",");
 
-		mgr1 = CacheClientManager.getInstance(managerName1);
-		mgr1.setSocketWriteBufferSize(64 * 1024);
+		mgr1 = XixiClientManager.getInstance(managerName1);
+		mgr1.socketManager.setSocketWriteBufferSize(64 * 1024);
 		mgr1.initialize(serverlist, enableSSL);
-		mgr1.enableLocalCache();
+	//	mgr1.enableLocalCache();
 	}
 
 	protected void setUp() throws Exception {
 		super.setUp();
-		CacheClientManager mgr1 = CacheClientManager.getInstance(managerName1);
-		cc1 = mgr1.createClient();
+		XixiClientManager mgr1 = XixiClientManager.getInstance(managerName1);
+		cc1 = mgr1.createXixiClient();
 	}
 
 	protected void tearDown() throws Exception {
@@ -66,16 +66,16 @@ public class CacheClientTest extends TestCase {
 	}
 
 	public void testFlush() {
-		CacheClient cca = mgr1.createClient(3);
-		CacheClient ccb = mgr1.createClient(15);
+		XixiClient cca = mgr1.createXixiClient(3);
+		XixiClient ccb = mgr1.createXixiClient(15);
 		cca.set("xixi1", "0315");
 		ccb.set("xixi2", "20080315");
 		int count = cca.flush();
 		assertEquals(1, count);
 		count = ccb.flush();
 		assertEquals(1, count);
-		assertFalse(cca.keyExists("xixi1"));
-		assertFalse(ccb.keyExists("xixi2"));
+		assertFalse(cca.exists("xixi1"));
+		assertFalse(ccb.exists("xixi2"));
 	}
 	
 	public void testFlush2() {
@@ -116,10 +116,10 @@ public class CacheClientTest extends TestCase {
 		mgr1.shutdown();
 		cc1.flush();
 		
-		mgr1 = CacheClientManager.getInstance(managerName1);
-		mgr1.setSocketWriteBufferSize(64 * 1024);
+		mgr1 = XixiClientManager.getInstance(managerName1);
+		mgr1.socketManager.setSocketWriteBufferSize(64 * 1024);
 		mgr1.initialize(serverlist, enableSSL);
-		mgr1.enableLocalCache();
+	//	mgr1.enableLocalCache();
 	}
 	
 	public void testGetError() {
@@ -137,18 +137,18 @@ public class CacheClientTest extends TestCase {
 		mgr1.shutdown();
 		cc1.getTransCoder().setEncodingCharsetName(cn);
 		assertNull(cc1.get("xixi"));
-		assertNull(cc1.getL("xixi"));
+	//	assertNull(cc1.getL("xixi"));
 		
-		mgr1 = CacheClientManager.getInstance(managerName1);
-		mgr1.setSocketWriteBufferSize(64 * 1024);
+		mgr1 = XixiClientManager.getInstance(managerName1);
+		mgr1.socketManager.setSocketWriteBufferSize(64 * 1024);
 		mgr1.initialize(serverlist, enableSSL);
-		mgr1.enableLocalCache();
+	//	mgr1.enableLocalCache();
 	}
 	
 	public void testGroup() {
-		CacheClient cca = mgr1.createClient(3);
-		CacheClient ccb = mgr1.createClient(15);
-	//	int groupID = cc1.getGroupID();
+		XixiClient cca = mgr1.createXixiClient(3);
+		XixiClient ccb = mgr1.createXixiClient(15);
+	//	int groupId = cc1.getGroupID();
 //		cc1.setGroupID(3);
 		cca.set("xixi", "group3");
 //		ccb.setGroupID(15);
@@ -166,7 +166,7 @@ public class CacheClientTest extends TestCase {
 		count = ccb.flush();
 		assertEquals(1, count);
 		
-//		cc1.setGroupID(groupID);
+//		cc1.setGroupID(groupId);
 		
 		assertNull(cca.getLastError());
 		assertNull(ccb.getLastError());
@@ -211,10 +211,10 @@ public class CacheClientTest extends TestCase {
 		cc1.set("xixi", new Long(2008));
 		CacheItem item = cc1.gets("xixi");
 		assertEquals(item.getValue(), new Long(2008));
-		assertTrue(item.cacheID != 0);
-		boolean ret = cc1.delete("xixi", item.cacheID + 1);
+		assertTrue(item.cacheId != 0);
+		boolean ret = cc1.delete("xixi", item.cacheId + 1);
 		assertFalse(ret);
-		ret = cc1.delete("xixi", item.cacheID);
+		ret = cc1.delete("xixi", item.cacheId);
 		assertTrue(ret);
 		assertEquals(null, cc1.get("xixi"));
 		assertFalse(cc1.delete(null));
@@ -258,12 +258,12 @@ public class CacheClientTest extends TestCase {
 	
 	public void testSetString() {
 		String value = "test of string encoding";
-		CacheClientManager mgr = CacheClientManager.getInstance("test1");
+		XixiClientManager mgr = XixiClientManager.getInstance("test1");
 		mgr.setNoDelay(false);
 		mgr.initialize(serverlist, null,
 				new XixiWeightMap<Integer>(false, XixiWeightMap.CRC32_HASH),
 				enableSSL);
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
 		cc.set("xixi", value);
 		String s = (String) cc.get("xixi");
 		assertEquals(s, value);
@@ -271,12 +271,12 @@ public class CacheClientTest extends TestCase {
 		s = (String) cc.get("xixi1");
 		assertEquals(s, value);
 		mgr.shutdown();
-		mgr = CacheClientManager.getInstance("test2");
+		mgr = XixiClientManager.getInstance("test2");
 		mgr.setNoDelay(true);
 		mgr.initialize(serverlist, null,
 				new XixiWeightMap<Integer>(false, XixiWeightMap.MD5_HASH),
 				enableSSL);
-		cc = mgr.createClient();
+		cc = mgr.createXixiClient();
 		cc.set("xixi", value);
 		s = (String) cc.get("xixi");
 		assertEquals(s, value);
@@ -305,7 +305,7 @@ public class CacheClientTest extends TestCase {
 		cc1.getTransCoder().setOption2((byte)0xF1);
 		cc1.set("xixi", "base");
 		CacheBaseItem item = cc1.getBase("xixi");
-		assertTrue(item.cacheID != 0);
+		assertTrue(item.cacheId != 0);
 		assertEquals((short)0x1234, item.getOption1());
 		assertEquals((byte)0xF1, item.getOption2());
 		assertEquals((short)0x1234, cc1.getTransCoder().getOption1());
@@ -333,28 +333,28 @@ public class CacheClientTest extends TestCase {
 		item = cc1.getBase("xixi");
 		assertNull(item);
 		
-		mgr1 = CacheClientManager.getInstance(managerName1);
-		mgr1.setSocketWriteBufferSize(64 * 1024);
+		mgr1 = XixiClientManager.getInstance(managerName1);
+		mgr1.socketManager.setSocketWriteBufferSize(64 * 1024);
 		mgr1.initialize(serverlist, enableSSL);
-		mgr1.enableLocalCache();
+	//	mgr1.enableLocalCache();
 	}
 	
 	public void testKeyExsits() {
 		cc1.set("xixi", "base");
-		assertTrue(cc1.keyExists("xixi"));
+		assertNotNull(cc1.getBase("xixi"));
 		cc1.delete("xixi");
-		assertFalse(cc1.keyExists("xixi"));
+		assertNull(cc1.getBase("xixi"));
 	}
 
 	public void testWeightMap() {
 		String input = "test of string encoding";
 
-		CacheClientManager mgr = CacheClientManager.getInstance("testWeightMap");
+		XixiClientManager mgr = XixiClientManager.getInstance("testWeightMap");
 		mgr.setNoDelay(false);
 		mgr.initialize(serverlist, null,
 				new XixiWeightMap<Integer>(false, XixiWeightMap.CRC32_HASH),
 				enableSSL);
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
 		assertFalse(mgr.getWeightMapper().isConsistent());
 		assertEquals(XixiWeightMap.CRC32_HASH, mgr.getWeightMapper().getHashingAlg());
 		
@@ -370,7 +370,7 @@ public class CacheClientTest extends TestCase {
 	
 	public void testWeightMap2() {
 		String input = "test of string encoding";
-		CacheClientManager mgr = CacheClientManager.getInstance("testWeightMap2");
+		XixiClientManager mgr = XixiClientManager.getInstance("testWeightMap2");
 		mgr.setNoDelay(false);
 		Integer[] weights = new Integer[2];
 		weights[0] = Integer.valueOf(0);
@@ -378,7 +378,7 @@ public class CacheClientTest extends TestCase {
 		mgr.initialize(serverlist, weights,
 				new XixiWeightMap<Integer>(true, XixiWeightMap.NATIVE_HASH),
 				enableSSL);
-		CacheClient cc = mgr.createClient();
+		XixiClient cc = mgr.createXixiClient();
 		cc.set("xixi", input);
 		String s = (String) cc.get("xixi");
 		assertEquals(s, input);
@@ -387,7 +387,7 @@ public class CacheClientTest extends TestCase {
 		assertEquals(s, input);
 		mgr.shutdown();
 		
-		mgr = CacheClientManager.getInstance("test3");
+		mgr = XixiClientManager.getInstance("test3");
 		mgr.setNoDelay(false);
 		weights = new Integer[2];
 		weights[0] = Integer.valueOf(1);
@@ -395,7 +395,7 @@ public class CacheClientTest extends TestCase {
 		mgr.initialize(serverlist, weights,
 				new XixiWeightMap<Integer>(true, XixiWeightMap.MD5_HASH),
 				enableSSL);
-		cc = mgr.createClient();
+		cc = mgr.createXixiClient();
 		cc.set("xixi", input);
 		s = (String) cc.get("xixi");
 		assertEquals(s, input);
@@ -434,7 +434,7 @@ public class CacheClientTest extends TestCase {
 		cc1.set("xixi", new StringBuilder("0315"));
 		CacheItem item = cc1.gets("xixi");
 		assertNotNull(item);
-		assertTrue(item.cacheID != 0);
+		assertTrue(item.cacheId != 0);
 		assertEquals(item.value.toString(), "0315");
 	}
 
@@ -484,8 +484,7 @@ public class CacheClientTest extends TestCase {
 
 		Thread.sleep(2000);
 
-		boolean res = cc1.keyExists("xixi");
-		assertFalse(res);
+		assertNull(cc1.getBase("xixi"));
 	}
 
 	public void testGetTouch() throws InterruptedException {
@@ -644,7 +643,7 @@ public class CacheClientTest extends TestCase {
 
 		Thread.sleep(2000);
 
-		assertFalse(cc1.keyExists("xixi"));
+		assertFalse(cc1.exists("xixi"));
 	}
 
 	public void testReplaceExpire2() throws InterruptedException {
@@ -658,13 +657,13 @@ public class CacheClientTest extends TestCase {
 	}
 
 	public void testReplace3() {
-		cc1.set("xixi", "0315", CacheClient.NO_EXPIRATION);
-		cc1.replace("xixi", "20080315", CacheClient.NO_EXPIRATION);
+		cc1.set("xixi", "0315", 0);
+		cc1.replace("xixi", "20080315", 0);
 		assertEquals("20080315", cc1.get("xixi"));
 	}
 	
 	public void testReplace4() {
-		cc1.set("xixi", "0315", CacheClient.NO_EXPIRATION);
+		cc1.set("xixi", "0315", 0);
 		long ret = cc1.replace("xixi", "20080315", 3, 123);
 		assertEquals(0, ret);
 		assertEquals("0315", cc1.get("xixi"));
@@ -724,12 +723,12 @@ public class CacheClientTest extends TestCase {
 		CacheItem item = cc1.gets("xixi");
 		assertEquals("0315", item.getValue());
 		
-		cc1.set("xixi", "20080315", CacheClient.NO_EXPIRATION, item.getCacheID());
+		cc1.set("xixi", "20080315", 0, item.getCacheID());
 		item = cc1.gets("xixi");
 		assertEquals("20080315", item.getValue());
 		cc1.set("xixi", "0315");
 		assertEquals("0315", cc1.get("xixi"));
-		cc1.set("xixi", "ke,ai", CacheClient.NO_EXPIRATION, item.getCacheID());
+		cc1.set("xixi", "ke,ai", 0, item.getCacheID());
 		assertEquals("0315", cc1.get("xixi"));
 	}
 
@@ -782,70 +781,7 @@ public class CacheClientTest extends TestCase {
 		SerialItem item2 = (SerialItem)cc1.get("xixi");
 		assertEquals(item, item2);
 	}
-
-	public static final class SerialItem implements Serializable {
-		private static final long serialVersionUID = -1331512331067654578L;
-		
-		private String name;
-		private byte[] buffer;
-		private HashMap<String, Integer> map = new HashMap<String, Integer>();
-
-		public SerialItem(String name, int size) {
-			this.name = name;
-			buffer = new byte[size];
-			for (int i = 0; i < size; i++) {
-				buffer[i] = (byte)(i & 0xFF);
-			}
-			for (int i = 0; i < 10; i++) {
-				map.put(name + i, Integer.valueOf(i));
-			}
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (!(obj instanceof SerialItem)) {
-				return false;
-			}
-			SerialItem item = (SerialItem)obj;
-			if (!name.equals(item.getName())) {
-				return false;
-			}
-			if (buffer.length != item.buffer.length) {
-				return false;
-			}
-			for (int i = 0; i < buffer.length; i++) {
-				if (buffer[i] != item.buffer[i]) {
-					return false;
-				}
-			}
-			if (map.size() != item.map.size()) {
-				return false;
-			}
-			for (int i = 0; i < 10; i++) {
-				String key = name + i;
-				Integer a = map.get(key);
-				Integer b = item.map.get(key);
-				if (a == null || b == null || !a.equals(b)) {
-					return false;
-				}
-			}
-			return true;
-		}
-		
-		public int hashCode() {
-			if (name == null) {
-				return 0;
-			}
-			return name.hashCode(); 
-		}
-	}
-	
+	/*
 	public void testStatsAddGroup() {
 		boolean ret = cc1.statsAddGroup(null, 315);
 		assertTrue(ret);
@@ -1057,12 +993,7 @@ public class CacheClientTest extends TestCase {
 		assertEquals(0, item.getFlags());
 		assertNull(cc.get("xixi"));
 		
-		/*
-		 * 	public static final int FLAGS_TYPE_STRING = 10;
-			public static final int FLAGS_TYPE_STRINGBUFFER = 11;
-			public static final int FLAGS_TYPE_STRINGBUILDER = 12;
-			public static final int FLAGS_TYPE_BYTEARR = 13;
-		 */
+
 		for (int i = 1; i <= 14; i++) {
 			if (i >= 10 && i <= 13) {
 				continue;
@@ -1300,5 +1231,68 @@ public class CacheClientTest extends TestCase {
 		
 		assertEquals(0, cc2.createWatch(mgr.getServers()[0], 100));
 		assertNull(cc2.checkWatch(mgr.getServers()[0], 1, 1, 100, 0));
+	}*/
+	
+	public static final class SerialItem implements Serializable {
+		private static final long serialVersionUID = -1331512331067654578L;
+		
+		private String name;
+		private byte[] buffer;
+		private HashMap<String, Integer> map = new HashMap<String, Integer>();
+
+		public SerialItem(String name, int size) {
+			this.name = name;
+			buffer = new byte[size];
+			for (int i = 0; i < size; i++) {
+				buffer[i] = (byte)(i & 0xFF);
+			}
+			for (int i = 0; i < 10; i++) {
+				map.put(name + i, Integer.valueOf(i));
+			}
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof SerialItem)) {
+				return false;
+			}
+			SerialItem item = (SerialItem)obj;
+			if (!name.equals(item.getName())) {
+				return false;
+			}
+			if (buffer.length != item.buffer.length) {
+				return false;
+			}
+			for (int i = 0; i < buffer.length; i++) {
+				if (buffer[i] != item.buffer[i]) {
+					return false;
+				}
+			}
+			if (map.size() != item.map.size()) {
+				return false;
+			}
+			for (int i = 0; i < 10; i++) {
+				String key = name + i;
+				Integer a = map.get(key);
+				Integer b = item.map.get(key);
+				if (a == null || b == null || !a.equals(b)) {
+					return false;
+				}
+			}
+			return true;
+		}
+		
+		public int hashCode() {
+			if (name == null) {
+				return 0;
+			}
+			return name.hashCode(); 
+		}
 	}
 }

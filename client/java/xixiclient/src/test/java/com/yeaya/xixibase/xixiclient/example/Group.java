@@ -16,8 +16,8 @@ limitations under the License.
 
 package com.yeaya.xixibase.xixiclient.example;
 
-import com.yeaya.xixibase.xixiclient.CacheClient;
-import com.yeaya.xixibase.xixiclient.CacheClientManager;
+import com.yeaya.xixibase.xixiclient.XixiClientManager;
+import com.yeaya.xixibase.xixiclient.XixiClient;
 
 public class Group  {
 
@@ -29,14 +29,14 @@ public class Group  {
 
 		String[] serverlist = servers.split(",");
 
-		CacheClientManager manager = CacheClientManager.getInstance("example");
+		XixiClientManager manager = XixiClientManager.getInstance("example");
 		manager.initialize(serverlist, false);
 		
-		int groupID1 = 1;
-		int groupID2 = 2;
+		int groupId1 = 1;
+		int groupId2 = 2;
 		
-		CacheClient cc1 = manager.createClient(groupID1);
-		CacheClient cc2 = manager.createClient(groupID2);
+		XixiClient cc1 = manager.createXixiClient(groupId1);
+		XixiClient cc2 = manager.createXixiClient(groupId2);
 		
 		cc1.set("key", "value1");
 		cc2.set("key", "value2");

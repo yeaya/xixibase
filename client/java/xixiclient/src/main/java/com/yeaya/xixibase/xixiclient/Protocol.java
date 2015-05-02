@@ -1,5 +1,5 @@
 /*
-   Copyright [2011] [Yao Yuan(yeaya@163.com)]
+   Copyright [2015] [Yao Yuan(yeaya@163.com)]
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -32,37 +32,36 @@ import com.yeaya.xixibase.xixiclient.multi.MultiUpdate;
 import com.yeaya.xixibase.xixiclient.multi.MultiUpdateExpiration;
 import com.yeaya.xixibase.xixiclient.multi.MultiUpdateExpirationItem;
 import com.yeaya.xixibase.xixiclient.multi.MultiUpdateItem;
+import com.yeaya.xixibase.xixiclient.network.SocketManager;
+import com.yeaya.xixibase.xixiclient.network.XixiSocket;
 
-public class CacheClientImpl extends Defines {
-	final static Logger log = LoggerFactory.getLogger(CacheClientImpl.class);
+public class Protocol extends Defines {
+	final static Logger log = LoggerFactory.getLogger(Protocol.class);
 
-	private int groupID = 0;
+	private int groupId = 0;
 	private TransCoder transCoder = new ObjectTransCoder();
-	private CacheClientManager manager;
+	private XixiClientManager manager;
+	private SocketManager socketManager;
 	private LocalCache localCache = null;
 	private String lastError;
+	protected boolean enableLocalCache;
 
 	public String getLastError() {
 		return lastError;
 	}
 
-	public CacheClientImpl(CacheClientManager manager, int groupID) {
+	public Protocol(XixiClientManager manager, SocketManager socketManager, int groupId, boolean enableLocalCache) {
 		this.manager = manager;
+		this.socketManager = socketManager;
+		manager.openLocalCache();
 		this.localCache = manager.getLocalCache();
-		this.groupID = groupID;
-	}
-/*
-	public CacheClientImpl(String managerName, int groupID) {
-		this(CacheClientManager.getInstance(managerName), groupID);
-	}
-*/
-	public int getGroupID() {
-		return groupID;
+		this.groupId = groupId;
+		this.enableLocalCache = enableLocalCache;
 	}
 
-//	public void setGroupID(int groupID) {
-//		this.groupID = groupID;
-//	}
+	public int getGroupID() {
+		return groupId;
+	}
 
 	public void setTransCoder(TransCoder transCoder) {
 		this.transCoder = transCoder;
@@ -72,7 +71,7 @@ public class CacheClientImpl extends Defines {
 		return transCoder;
 	}
 
-	public CacheItem get(String key, int getFlag, int expiration) {
+	public CacheItem get(String key, boolean touch, int expiration) {
 		lastError = null;
 		if (key == null) {
 			lastError = "get, key == null";
@@ -87,7 +86,7 @@ public class CacheClientImpl extends Defines {
 			return null;
 		}
 
-		String host = manager.getHost(key);
+		String host = socketManager.getHost(key);
 // manager.getHost never return null
 //		if (host == null) {
 //			lastError = "get, failed to get host";
@@ -97,21 +96,21 @@ public class CacheClientImpl extends Defines {
 
 		CacheItem item = null;
 		int watchID = 0;
-		if ((getFlag & LOCAL_CACHE) == LOCAL_CACHE) {
-			if ((getFlag & TOUCH_CACHE) == TOUCH_CACHE) {
-				item = localCache.getAndTouch(host, groupID, key, expiration);
+		if (enableLocalCache) {
+			if (touch) {
+				item = localCache.getAndTouch(host, groupId, key, expiration);
 			} else {
-				item = localCache.get(host, groupID, key);
+				item = localCache.get(host, groupId, key);
 			}
 			if (item != null) {
 				return item;
 			}
 		}
-		if ((getFlag & WATCH_CACHE) == WATCH_CACHE) {
+		if (enableLocalCache) {
 			watchID = localCache.getWatchID(host);
 		}
 		
-		XixiSocket socket = manager.getSocket(key);
+		XixiSocket socket = socketManager.getSocket(key);
 		if (socket == null) {
 			lastError = "get, failed to get socket";
 			log.error(lastError);
@@ -122,14 +121,14 @@ public class CacheClientImpl extends Defines {
 			ByteBuffer writeBuffer = socket.getWriteBuffer();
 			writeBuffer.clear();
 			writeBuffer.put(XIXI_CATEGORY_CACHE);
-			if ((getFlag & TOUCH_CACHE) == TOUCH_CACHE) {
+			if (touch) {
 				writeBuffer.put(XIXI_TYPE_GET_TOUCH_REQ);
-				writeBuffer.putInt(groupID); // groupID
+				writeBuffer.putInt(groupId); // groupId
 				writeBuffer.putInt(watchID); // watchID
 				writeBuffer.putInt(expiration);
 			} else {
 				writeBuffer.put(XIXI_TYPE_GET_REQ);
-				writeBuffer.putInt(groupID); // groupID
+				writeBuffer.putInt(groupId); // groupId
 				writeBuffer.putInt(watchID); // watchID
 			}
 			writeBuffer.putShort((short) keyBuf.length);
@@ -151,7 +150,7 @@ public class CacheClientImpl extends Defines {
 							key,
 							cacheID,
 							expiration,
-							groupID,
+							groupId,
 							flags,
 							obj,
 							objectSize[0],
@@ -200,7 +199,7 @@ public class CacheClientImpl extends Defines {
 			return null;
 		}
 
-		XixiSocket socket = manager.getSocket(key);
+		XixiSocket socket = socketManager.getSocket(key);
 		if (socket == null) {
 			lastError = "getBase, failed to get socket";
 			log.error(lastError);
@@ -212,7 +211,7 @@ public class CacheClientImpl extends Defines {
 			writeBuffer.clear();
 			writeBuffer.put(XIXI_CATEGORY_CACHE);
 			writeBuffer.put(XIXI_TYPE_GET_BASE_REQ);
-			writeBuffer.putInt(groupID); // groupID
+			writeBuffer.putInt(groupId); // groupId
 			writeBuffer.putShort((short) keyBuf.length);
 			writeBuffer.put(keyBuf);
 			socket.flush();
@@ -228,7 +227,7 @@ public class CacheClientImpl extends Defines {
 						key,
 						cacheID,
 						expiration,
-						groupID,
+						groupId,
 						flags,
 						valueSize);
 				return item;
@@ -255,12 +254,12 @@ public class CacheClientImpl extends Defines {
 		return null;
 	}
 /*
-	public boolean updateFlags(String key, long cacheID, int groupID, int flags) {
-		return updateFlags(XIXI_UPDATE_BASE_SUB_OP_FLAGS, key, cacheID, groupID, flags);
+	public boolean updateFlags(String key, long cacheID, int groupId, int flags) {
+		return updateFlags(XIXI_UPDATE_BASE_SUB_OP_FLAGS, key, cacheID, groupId, flags);
 	}
 	*/
-//	public boolean updateExpiration(String key, long cacheID, int groupID, int expiration) {
-//		return updateFlags((byte)2/*XIXI_UPDATE_BASE_SUB_OP_EXPIRATION*/, key, cacheID, groupID, 0, expiration);
+//	public boolean updateExpiration(String key, long cacheID, int groupId, int expiration) {
+//		return updateFlags((byte)2/*XIXI_UPDATE_BASE_SUB_OP_EXPIRATION*/, key, cacheID, groupId, 0, expiration);
 //	}
 
 	protected boolean updateFlags(String key, int flags, long cacheID) {
@@ -278,7 +277,7 @@ public class CacheClientImpl extends Defines {
 			return false;
 		}
 
-		XixiSocket socket = manager.getSocket(key);
+		XixiSocket socket = socketManager.getSocket(key);
 		if (socket == null) {
 			lastError = "updateFlags, failed to get socket";
 			log.error(lastError);
@@ -293,7 +292,7 @@ public class CacheClientImpl extends Defines {
 			writeBuffer.put(XIXI_TYPE_UPDATE_FLAGS_REQ);
 			writeBuffer.put(subOp);
 			writeBuffer.putLong(cacheID);
-			writeBuffer.putInt(groupID);
+			writeBuffer.putInt(groupId);
 			writeBuffer.putInt(flags);
 			writeBuffer.putShort((short) keyBuf.length);
 			writeBuffer.put(keyBuf);
@@ -303,7 +302,7 @@ public class CacheClientImpl extends Defines {
 			byte type = socket.readByte();
 			if (category == XIXI_CATEGORY_CACHE && type == XIXI_TYPE_UPDATE_FLAGS_RES) {
 				socket.readLong(); // rescacheID
-				localCache.remove(socket.getHost(), groupID, key);
+				localCache.remove(socket.getHost(), groupId, key);
 				return true;
 			} else {
 				short reason = socket.readShort();
@@ -343,7 +342,7 @@ public class CacheClientImpl extends Defines {
 			return false;
 		}
 
-		XixiSocket socket = manager.getSocket(key);
+		XixiSocket socket = socketManager.getSocket(key);
 		if (socket == null) {
 			lastError = "updateExpiration, failed to get socket";
 			log.error(lastError);
@@ -358,7 +357,7 @@ public class CacheClientImpl extends Defines {
 			writeBuffer.put(XIXI_TYPE_UPDATE_EXPIRATION_REQ);
 			writeBuffer.put(subOp);
 			writeBuffer.putLong(cacheID);
-			writeBuffer.putInt(groupID);
+			writeBuffer.putInt(groupId);
 			writeBuffer.putInt(expiration);
 			writeBuffer.putShort((short) keyBuf.length);
 			writeBuffer.put(keyBuf);
@@ -368,7 +367,7 @@ public class CacheClientImpl extends Defines {
 			byte type = socket.readByte();
 			if (category == XIXI_CATEGORY_CACHE && type == XIXI_TYPE_UPDATE_EXPIRATION_RES) {
 				socket.readLong(); // cacheID
-				localCache.remove(socket.getHost(), groupID, key);
+				localCache.remove(socket.getHost(), groupId, key);
 				return true;
 			} else {
 				short reason = socket.readShort();
@@ -393,27 +392,27 @@ public class CacheClientImpl extends Defines {
 		return false;
 	}
 	
-	public long add(String key, Object value, int expiration, boolean watchFlag) {
-		return update(XIXI_UPDATE_SUB_OP_ADD, key, value, expiration, NO_CAS, watchFlag);
+	public long add(String key, Object value, int expiration) {
+		return update(XIXI_UPDATE_SUB_OP_ADD, key, value, expiration, NO_CAS);
 	}
 
 	public long append(String key, Object value, long cacheID) {
-		return update(XIXI_UPDATE_SUB_OP_APPEND, key, value, NO_EXPIRATION, cacheID, false);
+		return update(XIXI_UPDATE_SUB_OP_APPEND, key, value, NO_EXPIRATION, cacheID);
 	}
 
-	public long set(String key, Object value, int expiration, long cacheID, boolean watchFlag) {
-		return update(XIXI_UPDATE_SUB_OP_SET, key, value, expiration, cacheID, watchFlag);
+	public long set(String key, Object value, int expiration, long cacheID) {
+		return update(XIXI_UPDATE_SUB_OP_SET, key, value, expiration, cacheID);
 	}
 
 	public long prepend(String key, Object value, long cacheID) {
-		return update(XIXI_UPDATE_SUB_OP_PREPEND, key, value, NO_EXPIRATION, cacheID, false);
+		return update(XIXI_UPDATE_SUB_OP_PREPEND, key, value, NO_EXPIRATION, cacheID);
 	}
 
-	public long replace(String key, Object value, int expiration, long cacheID, boolean watchFlag) {
-		return update(XIXI_UPDATE_SUB_OP_REPLACE, key, value, expiration, cacheID, watchFlag);
+	public long replace(String key, Object value, int expiration, long cacheID) {
+		return update(XIXI_UPDATE_SUB_OP_REPLACE, key, value, expiration, cacheID);
 	}
 
-	private long update(byte subOp, String key, Object value, int expiration, long cacheID, boolean watchFlag) {
+	private long update(byte subOp, String key, Object value, int expiration, long cacheID) {
 		lastError = null;
 		if (key == null) {
 			lastError = "update, key == null";
@@ -434,7 +433,7 @@ public class CacheClientImpl extends Defines {
 			return NO_CAS;
 		}
 
-		XixiSocket socket = manager.getSocket(key);
+		XixiSocket socket = socketManager.getSocket(key);
 		if (socket == null) {
 			lastError = "update, failed to get socket";
 			log.error(lastError);
@@ -444,7 +443,7 @@ public class CacheClientImpl extends Defines {
 		try {
 			byte op_flag = (byte)(subOp | XIXI_UPDATE_REPLY);
 			int watchID = 0;
-			if (watchFlag) {
+			if (enableLocalCache) {
 				watchID = localCache.getWatchID(socket.getHost());
 			}
 
@@ -460,7 +459,7 @@ public class CacheClientImpl extends Defines {
 			writeBuffer.put(XIXI_TYPE_UPDATE_REQ);
 			writeBuffer.put(op_flag);
 			writeBuffer.putLong(cacheID);//uint64_t cacheID;
-			writeBuffer.putInt(groupID);
+			writeBuffer.putInt(groupId);
 			writeBuffer.putInt(flags); // flags
 			writeBuffer.putInt(expiration);//			uint32_t expiration;
 			writeBuffer.putInt(watchID);
@@ -476,13 +475,13 @@ public class CacheClientImpl extends Defines {
 			byte type = socket.readByte();
 			if (category == XIXI_CATEGORY_CACHE && type == XIXI_TYPE_UPDATE_RES) {
 				long newCacheID = socket.readLong();
-				localCache.remove(socket.getHost(), groupID, key);
+				localCache.remove(socket.getHost(), groupId, key);
 				if (watchID != 0) {
 					CacheItem item = new CacheItem(
 							key,
 							newCacheID,
 							expiration,
-							groupID,
+							groupId,
 							flags,
 							value,
 							objectSize[0],
@@ -529,7 +528,7 @@ public class CacheClientImpl extends Defines {
 			return false;
 		}
 
-		XixiSocket socket = manager.getSocket(key);
+		XixiSocket socket = socketManager.getSocket(key);
 		if (socket == null) {
 			lastError = "delete, failed to get socket";
 			log.error(lastError);
@@ -544,7 +543,7 @@ public class CacheClientImpl extends Defines {
 			writeBuffer.put(XIXI_TYPE_DELETE_REQ);
 			writeBuffer.put(op_flag);
 			writeBuffer.putLong(cacheID); // cacheID
-			writeBuffer.putInt(groupID); // groupID
+			writeBuffer.putInt(groupId); // groupId
 			writeBuffer.putShort((short) keyBuf.length);
 			writeBuffer.put(keyBuf);
 			socket.flush();
@@ -552,7 +551,7 @@ public class CacheClientImpl extends Defines {
 			byte category = socket.readByte();
 			byte type = socket.readByte();
 			if (category == XIXI_CATEGORY_CACHE && type == XIXI_TYPE_DELETE_RES) {
-				localCache.remove(socket.getHost(), groupID, key);
+				localCache.remove(socket.getHost(), groupId, key);
 				return true;
 			} else {
 				short reason = ObjectTransCoder.decodeShort(socket.read(2));
@@ -586,6 +585,14 @@ public class CacheClientImpl extends Defines {
 		return delta(key, XIXI_DELTA_SUB_OP_DECR, delta, cacheID);
 	}
 
+	protected DeltaItem delta(String key, long delta, long cacheID) {
+		if (delta >= 0) {
+			return delta(key, XIXI_DELTA_SUB_OP_INCR, delta, cacheID);
+		} else {
+			return delta(key, XIXI_DELTA_SUB_OP_DECR, -delta, cacheID);
+		}
+	}
+	
 	private DeltaItem delta(String key, byte subOp, long delta, long cacheID) {
 		lastError = null;
 		if (key == null) {
@@ -601,7 +608,7 @@ public class CacheClientImpl extends Defines {
 			return null;
 		}
 
-		XixiSocket socket = manager.getSocket(key);
+		XixiSocket socket = socketManager.getSocket(key);
 		if (socket == null) {
 			lastError = "delta, failed to get socket";
 			log.error(lastError);
@@ -616,7 +623,7 @@ public class CacheClientImpl extends Defines {
 			writeBuffer.put(XIXI_TYPE_DETLA_REQ);
 			writeBuffer.put(op_flag);
 			writeBuffer.putLong(cacheID); // cacheID
-			writeBuffer.putInt(groupID); // groupID
+			writeBuffer.putInt(groupId); // groupId
 			writeBuffer.putLong(delta); // delta
 			writeBuffer.putShort((short) keyBuf.length);// key size
 			writeBuffer.put(keyBuf);
@@ -627,7 +634,7 @@ public class CacheClientImpl extends Defines {
 			if (category == XIXI_CATEGORY_CACHE && type == XIXI_TYPE_DETLA_RES) {
 				cacheID = socket.readLong();//uint64_t ;
 				long value = socket.readLong();
-				localCache.remove(socket.getHost(), groupID, key);
+				localCache.remove(socket.getHost(), groupId, key);
 				DeltaItem item = new DeltaItem();
 				item.cacheID = cacheID;
 				item.value = value;
@@ -656,63 +663,63 @@ public class CacheClientImpl extends Defines {
 	}
 
 	public List<CacheItem> multiGet(List<String> keys) {
-		MultiGet multi = new MultiGet(this.manager, this.groupID, this.transCoder);
+		MultiGet multi = new MultiGet(this.manager, socketManager, this.groupId, this.transCoder);
 		List<CacheItem> list = multi.multiGet(keys);
 		lastError = multi.getLastError();
 		return list;
 	}
 
 	public int multiSet(List<MultiUpdateItem> items) {
-		MultiUpdate multi = new MultiUpdate(this.manager, this.groupID, this.transCoder);
+		MultiUpdate multi = new MultiUpdate(this.manager, socketManager, this.groupId, this.transCoder);
 		int ret = multi.multiUpdate(items, XIXI_UPDATE_SUB_OP_SET);
 		lastError = multi.getLastError();
 		return ret;
 	}
 	
 	public int multiAdd(List<MultiUpdateItem> items) {
-		MultiUpdate multi = new MultiUpdate(this.manager, this.groupID, this.transCoder);
+		MultiUpdate multi = new MultiUpdate(this.manager, socketManager, this.groupId, this.transCoder);
 		int ret = multi.multiUpdate(items, XIXI_UPDATE_SUB_OP_ADD);
 		lastError = multi.getLastError();
 		return ret;
 	}
 	
 	public int multiReplace(List<MultiUpdateItem> items) {
-		MultiUpdate multi = new MultiUpdate(this.manager, this.groupID, this.transCoder);
+		MultiUpdate multi = new MultiUpdate(this.manager, socketManager, this.groupId, this.transCoder);
 		int ret = multi.multiUpdate(items, XIXI_UPDATE_SUB_OP_REPLACE);
 		lastError = multi.getLastError();
 		return ret;
 	}
 	
 	public int multiAppend(List<MultiUpdateItem> items) {
-		MultiUpdate multi = new MultiUpdate(this.manager, this.groupID, this.transCoder);
+		MultiUpdate multi = new MultiUpdate(this.manager, socketManager, this.groupId, this.transCoder);
 		int ret = multi.multiUpdate(items, XIXI_UPDATE_SUB_OP_APPEND);
 		lastError = multi.getLastError();
 		return ret;
 	}
 	
 	public int multiPrepend(List<MultiUpdateItem> items) {
-		MultiUpdate multi = new MultiUpdate(this.manager, this.groupID, this.transCoder);
+		MultiUpdate multi = new MultiUpdate(this.manager, socketManager, this.groupId, this.transCoder);
 		int ret = multi.multiUpdate(items, XIXI_UPDATE_SUB_OP_PREPEND);
 		lastError = multi.getLastError();
 		return ret;
 	}
 	
 	public int multiDelete(List<MultiDeleteItem> items) {
-		MultiDelete multi = new MultiDelete(this.manager, this.groupID, this.transCoder);
+		MultiDelete multi = new MultiDelete(this.manager, socketManager, this.groupId, this.transCoder);
 		int ret = multi.multiDelete(items);
 		lastError = multi.getLastError();
 		return ret;
 	}
 /*
 	public int multiUpdateFlags(List<MultiUpdateFlagsItem> items) {
-		MultiupdateFlags multi = new MultiupdateFlags(this.manager, this.groupID, this.transCoder);
+		MultiupdateFlags multi = new MultiupdateFlags(this.manager, this.groupId, this.transCoder);
 		int ret = multi.multiupdateFlags(items, XIXI_UPDATE_BASE_SUB_OP_FLAGS);
 		lastError = multi.getLastError();
 		return ret;
 	}
 */
 	public int multiUpdateExpiration(List<MultiUpdateExpirationItem> items) {
-		MultiUpdateExpiration multi = new MultiUpdateExpiration(this.manager, this.groupID, this.transCoder);
+		MultiUpdateExpiration multi = new MultiUpdateExpiration(this.manager, socketManager, this.groupId, this.transCoder);
 		int ret = multi.multiUpdateExpiration(items);
 		lastError = multi.getLastError();
 		return ret;
@@ -734,7 +741,7 @@ public class CacheClientImpl extends Defines {
 		}
 
 		for (int i = 0; i < servers.length; i++) {
-			XixiSocket socket = manager.getSocketByHost(servers[i]);
+			XixiSocket socket = socketManager.getSocketByHost(servers[i]);
 			if (socket == null) {
 				lastError = "flush, can not to get socket by host:" + servers[i];
 				log.error(lastError);
@@ -745,7 +752,7 @@ public class CacheClientImpl extends Defines {
 				writeBuffer.clear();
 				writeBuffer.put(XIXI_CATEGORY_CACHE);
 				writeBuffer.put(XIXI_TYPE_FLUSH_REQ);
-				writeBuffer.putInt(groupID);
+				writeBuffer.putInt(groupId);
 			
 				socket.flush();
 
@@ -754,7 +761,7 @@ public class CacheClientImpl extends Defines {
 				if (category == XIXI_CATEGORY_CACHE && type == XIXI_TYPE_FLUSH_RES) {
 					int flushCount = socket.readInt(); // int flush_count = 
 					socket.readLong(); // long flush_size =
-					localCache.flush(socket.getHost(), groupID);
+					localCache.flush(socket.getHost(), groupId);
 					count += flushCount;
 				} else {
 					short reason = socket.readShort();
@@ -781,12 +788,12 @@ public class CacheClientImpl extends Defines {
 		return count;
 	}
 
-	protected boolean statsAddGroup(String[] servers, int groupID) {
-		return stats(XIXI_STATS_SUB_OP_ADD_GROUP,  servers, groupID, (byte)0, null);
+	protected boolean statsAddGroup(String[] servers, int groupId) {
+		return stats(XIXI_STATS_SUB_OP_ADD_GROUP,  servers, groupId, (byte)0, null);
 	}
 	
-	protected boolean statsRemoveGroup(String[] servers, int groupID) {
-		return stats(XIXI_STATS_SUB_OP_REMOVE_GROUP,  servers, groupID, (byte)0, null);
+	protected boolean statsRemoveGroup(String[] servers, int groupId) {
+		return stats(XIXI_STATS_SUB_OP_REMOVE_GROUP,  servers, groupId, (byte)0, null);
 	}
 	
 	protected boolean statsGetStats(String[] servers, byte class_id, Map<String, Map<String, String>> result) {
@@ -797,15 +804,15 @@ public class CacheClientImpl extends Defines {
 		return stats(XIXI_STATS_SUB_OP_GET_AND_CLEAR_STATS_SUM_ONLY,  servers, 0, class_id, result);
 	}
 */
-	protected boolean statsGetGroupStats(String[] servers, int groupID, byte class_id, Map<String, Map<String, String>> result) {
-		return stats(XIXI_STATS_SUB_OP_GET_STATS_GROUP_ONLY,  servers, groupID, class_id, result);
+	protected boolean statsGetGroupStats(String[] servers, int groupId, byte class_id, Map<String, Map<String, String>> result) {
+		return stats(XIXI_STATS_SUB_OP_GET_STATS_GROUP_ONLY,  servers, groupId, class_id, result);
 	}
 /*
-	protected boolean statsGetAndClearGroupStats(String[] servers, int groupID, byte class_id, Map<String, Map<String, String>> result) {
-		return stats(XIXI_STATS_SUB_OP_GET_AND_CLEAR_STATS_GROUP_ONLY,  servers, groupID, class_id, result);
+	protected boolean statsGetAndClearGroupStats(String[] servers, int groupId, byte class_id, Map<String, Map<String, String>> result) {
+		return stats(XIXI_STATS_SUB_OP_GET_AND_CLEAR_STATS_GROUP_ONLY,  servers, groupId, class_id, result);
 	}
 */
-	protected boolean stats(byte op_flag, String[] servers, int groupID, byte class_id, Map<String, Map<String, String>> result) {
+	protected boolean stats(byte op_flag, String[] servers, int groupId, byte class_id, Map<String, Map<String, String>> result) {
 		lastError = null;
 
 		servers = (servers == null) ? manager.getServers() : servers;
@@ -823,7 +830,7 @@ public class CacheClientImpl extends Defines {
 			if (result != null) {
 				result.put(servers[i], hm);
 			}
-			XixiSocket socket = manager.getSocketByHost(servers[i]);
+			XixiSocket socket = socketManager.getSocketByHost(servers[i]);
 			if (socket == null) {
 				lastError = "stats, can not to get socket by host:" + servers[i];
 				log.error(lastError);
@@ -837,7 +844,7 @@ public class CacheClientImpl extends Defines {
 			writeBuffer.put(XIXI_TYPE_STATS_REQ);
 			writeBuffer.put(op_flag);
 			writeBuffer.put(class_id);
-			writeBuffer.putInt(groupID);
+			writeBuffer.putInt(groupId);
 			try {
 				socket.flush();
 
@@ -891,7 +898,7 @@ public class CacheClientImpl extends Defines {
 	protected int createWatch(String host, int maxNextCheckInterval) {
 		lastError = null;
 	
-		XixiSocket socket = manager.getSocketByHost(host);
+		XixiSocket socket = socketManager.getSocketByHost(host);
 		if (socket == null) {
 			lastError = "createWatch, failed on get socket by host";
 			log.error(lastError);
@@ -903,7 +910,7 @@ public class CacheClientImpl extends Defines {
 			writeBuffer.clear();
 			writeBuffer.put(XIXI_CATEGORY_CACHE);
 			writeBuffer.put(XIXI_CREATE_WATCH_REQ);
-			writeBuffer.putInt(groupID);
+			writeBuffer.putInt(groupId);
 			writeBuffer.putInt(maxNextCheckInterval);
 			socket.flush();
 		//	log.debug("localCache createWatch " + host + " watchID2=" + watchID);
@@ -938,7 +945,7 @@ public class CacheClientImpl extends Defines {
 	
 	protected WatchResult checkWatch(String host, int watchID, int checkTimeout, int maxNextCheckInterval, int ackSequence) {
 		lastError = null;
-		XixiSocket socket = manager.getSocketByHost(host);
+		XixiSocket socket = socketManager.getSocketByHost(host);
 		if (socket == null) {
 			lastError = "checkWatch, failed to get by host:" + host;
 			log.error(lastError);
@@ -949,7 +956,7 @@ public class CacheClientImpl extends Defines {
 			writeBuffer.clear();
 			writeBuffer.put(XIXI_CATEGORY_CACHE);
 			writeBuffer.put(XIXI_CHECK_WATCH_REQ);
-			writeBuffer.putInt(groupID);
+			writeBuffer.putInt(groupId);
 			writeBuffer.putInt(watchID);
 			writeBuffer.putInt(checkTimeout);
 			writeBuffer.putInt(maxNextCheckInterval);

@@ -16,9 +16,9 @@ limitations under the License.
 
 package com.yeaya.xixibase.xixiclient.example;
 
-import com.yeaya.xixibase.xixiclient.CacheClient;
-import com.yeaya.xixibase.xixiclient.CacheClientManager;
+import com.yeaya.xixibase.xixiclient.XixiClientManager;
 import com.yeaya.xixibase.xixiclient.CacheItem;
+import com.yeaya.xixibase.xixiclient.XixiClient;
 
 public class Gets  {
 
@@ -30,10 +30,10 @@ public class Gets  {
 
 		String[] serverlist = servers.split(",");
 
-		CacheClientManager manager = CacheClientManager.getInstance("example");
+		XixiClientManager manager = XixiClientManager.getInstance("example");
 		manager.initialize(serverlist);
 		
-		CacheClient cc = manager.createClient();
+		XixiClient cc = manager.createXixiClient();
 		
 		cc.set("key", "value1");
 		CacheItem item1 = cc.gets("key");

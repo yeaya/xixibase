@@ -1,5 +1,5 @@
 /*
-   Copyright [2011] [Yao Yuan(yeaya@163.com)]
+   Copyright [2015] [Yao Yuan(yeaya@163.com)]
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.yeaya.xixibase.xixiclient.multi.MultiDeleteItem;
 import com.yeaya.xixibase.xixiclient.multi.MultiUpdateItem;
+import com.yeaya.xixibase.xixiclient.network.SocketManager;
 
 /**
  * Xixibase cache client.
@@ -29,40 +30,32 @@ import com.yeaya.xixibase.xixiclient.multi.MultiUpdateItem;
  * @author Yao Yuan
  *
  */
-public class CacheClient extends Defines {
-	private CacheClientImpl client;
+public class XixiClientImpl implements XixiClient {
+	protected Protocol protocol;
 
 	/**
 	 * Create a <tt>CacheClient</tt>.
 	 * @param manager cache client manager
-	 * @param groupID
+	 * @param groupId
 	 */
-	public CacheClient(CacheClientManager manager, int groupID) {
-		client = new CacheClientImpl(manager, groupID);
-	}
-/*
-	public CacheClient(String managerName, int groupID) {
-		client = new CacheClientImpl(managerName, groupID);
-	}
-*/
-	/**
-	 * Get groupID.
-	 * @return groupID
-	 */
-	public int getGroupID() {
-		return client.getGroupID();
+	protected XixiClientImpl(XixiClientManager manager, SocketManager socketManager, int groupId, boolean enableLocalCache) {
+		protocol = new Protocol(manager, socketManager, groupId, enableLocalCache);
 	}
 
-//	public void setGroupID(int groupID) {
-//		client.setGroupID(groupID);
-//	}
+	/**
+	 * Get groupId.
+	 * @return groupId
+	 */
+	public int getGroupId() {
+		return protocol.getGroupID();
+	}
 	
 	/**
 	 * Get last error.
 	 * @return last error
 	 */
 	public String getLastError() {
-		return client.getLastError();
+		return protocol.getLastError();
 	}
 
 	/**
@@ -70,7 +63,7 @@ public class CacheClient extends Defines {
 	 * @param transCoder
 	 */
 	public void setTransCoder(TransCoder transCoder) {
-		client.setTransCoder(transCoder);
+		protocol.setTransCoder(transCoder);
 	}
 
 	/**
@@ -78,7 +71,7 @@ public class CacheClient extends Defines {
 	 * @return transCoder
 	 */
 	public TransCoder getTransCoder() {
-		return client.getTransCoder();
+		return protocol.getTransCoder();
 	}
 
 	/**
@@ -90,7 +83,7 @@ public class CacheClient extends Defines {
 	 * @return <tt>true</tt> if operation success
 	 */
 	public boolean delete(String key) {
-		return client.delete(key, NO_CAS);
+		return protocol.delete(key, Defines.NO_CAS);
 	}
 
 	/**
@@ -108,7 +101,7 @@ public class CacheClient extends Defines {
 	 * @return <tt>true</tt> if operation success
 	 */
 	public boolean delete(String key, long cacheID) {
-		return client.delete(key, cacheID);
+		return protocol.delete(key, cacheID);
 	}
 
 	/**
@@ -116,18 +109,18 @@ public class CacheClient extends Defines {
 	 * <pre>
 	 * 	if the object is exist in Xixibase server
 	 * 		update xixibase set xixibase.value = value
-	 * 							xixibase.expiration = NO_EXPIRATION
+	 * 							xixibase.expiration = Defines.NO_EXPIRATION
 	 * 						where
 	 * 							xixibase.key = key
 	 * 	else
-	 * 		insert xixibase(key, value, expiration) values(key, value, NO_EXPIRATION);
+	 * 		insert xixibase(key, value, expiration) values(key, value, Defines.NO_EXPIRATION);
 	 * </pre>
 	 * @param key
 	 * @param value
 	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
 	 */
 	public long set(String key, Object value) {
-		return client.set(key, value, NO_EXPIRATION, NO_CAS, false);
+		return protocol.set(key, value, Defines.NO_EXPIRATION, Defines.NO_CAS);
 	}
 
 	/**
@@ -147,7 +140,7 @@ public class CacheClient extends Defines {
 	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
 	 */
 	public long set(String key, Object value, int expiration) {
-		return client.set(key, value, expiration, NO_CAS, false);
+		return protocol.set(key, value, expiration, Defines.NO_CAS);
 	}
 
 	/**
@@ -170,72 +163,7 @@ public class CacheClient extends Defines {
 	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
 	 */
 	public long set(String key, Object value, int expiration, long cacheID) {
-		return client.set(key, value, expiration, cacheID, false);
-	}
-
-	/**
-	 * Set one object to remote Xixibase server and watch its change. If this operation
-	 * is success, stone the object into local cache.
-	 * <pre>
-	 * 	if the object is exist in Xixibase server
-	 * 		update xixibase set xixibase.value = value
-	 * 							xixibase.expiration = NO_EXPIRATION
-	 * 						where
-	 * 							xixibase.key = key
-	 * 	else
-	 * 		insert xixibase(key, value, expiration) values(key, value, NO_EXPIRATION);
-	 * </pre>
-	 * @param key
-	 * @param value
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
-	 */
-	public long setW(String key, Object value) {
-		return client.set(key, value, NO_EXPIRATION, NO_CAS, true);
-	}
-
-	/**
-	 * Set one object to remote Xixibase server and watch its change. If this operation
-	 * is success, stone the object into local cache.
-	 * <pre>
-	 * 	if the object is exist in Xixibase server
-	 * 		update xixibase set xixibase.value = value
-	 * 							xixibase.expiration = expiration
-	 * 						where
-	 * 							xixibase.key = key
-	 * 	else
-	 * 		insert xixibase(key, value, expiration) values(key, value, expiration);
-	 * </pre>
-	 * @param key
-	 * @param value
-	 * @param expiration
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
-	 */
-	public long setW(String key, Object value, int expiration) {
-		return client.set(key, value, expiration, NO_CAS, true);
-	}
-
-	/**
-	 * Set one object to remote Xixibase server and watch its change. If this operation
-	 * is success, stone the object into local cache.
-	 * <pre>
-	 * 	if the object is exist in Xixibase server
-	 * 		update xixibase set xixibase.value = value
-	 * 							xixibase.expiration = expiration
-	 * 						where
-	 * 							xixibase.key = key
-	 * 						and
-	 * 							xixibase.cacheID = cacheID
-	 * 	else
-	 * 		insert xixibase(key, value, expiration) values(key, value, expiration);
-	 * </pre>
-	 * @param key
-	 * @param value
-	 * @param expiration
-	 * @param cacheID
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
-	 */
-	public long setW(String key, Object value, int expiration, long cacheID) {
-		return client.set(key, value, expiration, cacheID, true);
+		return protocol.set(key, value, expiration, cacheID);
 	}
 
 	/**
@@ -251,7 +179,7 @@ public class CacheClient extends Defines {
 	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
 	 */
 	public long add(String key, Object value) {
-		return client.add(key, value, NO_EXPIRATION, false);
+		return protocol.add(key, value, Defines.NO_EXPIRATION);
 	}
 
 	/**
@@ -268,42 +196,7 @@ public class CacheClient extends Defines {
 	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
 	 */
 	public long add(String key, Object value, int expiration) {
-		return client.add(key, value, expiration, false);
-	}
-
-	/**
-	 * Add one object to remote Xixibase server and watch its change. If this operation
-	 * is success, stone the object into local cache.
-	 * <pre>
-	 * 	if the object is exist in Xixibase server
-	 * 		return 0;
-	 * 	else
-	 * 		insert xixibase(key, value, expiration) values(key, value, NO_EXPIRATION);
-	 * </pre>
-	 * @param key
-	 * @param value
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
-	 */
-	public long addW(String key, Object value) {
-		return client.add(key, value, NO_EXPIRATION, true);
-	}
-
-	/**
-	 * Add one object to remote Xixibase server and watch its change. If this operation
-	 * is success, stone the object into local cache.
-	 * <pre>
-	 * 	if the object is exist in Xixibase server
-	 * 		return 0;
-	 * 	else
-	 * 		insert xixibase(key, value, expiration) values(key, value, expiration);
-	 * </pre>
-	 * @param key
-	 * @param value
-	 * @param expiration
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
-	 */
-	public long addW(String key, Object value, int expiration) {
-		return client.add(key, value, expiration, true);
+		return protocol.add(key, value, expiration);
 	}
 
 	/**
@@ -311,7 +204,7 @@ public class CacheClient extends Defines {
 	 * <pre>
 	 * 	if the object is exist in Xixibase server
 	 * 		update xixibase set xixibase.value = value
-	 * 							xixibase.expiration = NO_EXPIRATION
+	 * 							xixibase.expiration = Defines.NO_EXPIRATION
 	 * 						where
 	 * 							xixibase.key = key
 	 * 	else
@@ -322,7 +215,7 @@ public class CacheClient extends Defines {
 	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
 	 */
 	public long replace(String key, Object value) {
-		return client.replace(key, value, NO_EXPIRATION, NO_CAS, false);
+		return protocol.replace(key, value, Defines.NO_EXPIRATION, Defines.NO_CAS);
 	}
 
 	/**
@@ -342,7 +235,7 @@ public class CacheClient extends Defines {
 	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
 	 */
 	public long replace(String key, Object value, int expiration) {
-		return client.replace(key, value, expiration, NO_CAS, false);
+		return protocol.replace(key, value, expiration, Defines.NO_CAS);
 	}
 
 	/**
@@ -365,95 +258,9 @@ public class CacheClient extends Defines {
 	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
 	 */
 	public long replace(String key, Object value, int expiration, long cacheID) {
-		return client.replace(key, value, expiration, cacheID, false);
+		return protocol.replace(key, value, expiration, cacheID);
 	}
 
-	/**
-	 * Replace one object to remote Xixibase server and watch its change. If this operation
-	 * is success, stone the object into local cache.
-	 * <pre>
-	 * 	if the object is exist in Xixibase server
-	 * 		update xixibase set xixibase.value = value
-	 * 							xixibase.expiration = NO_EXPIRATION
-	 * 						where
-	 * 							xixibase.key = key
-	 * 	else
-	 * 		return 0;
-	 * </pre>
-	 * @param key
-	 * @param value
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
-	 */
-	public long replaceW(String key, Object value) {
-		return client.replace(key, value, NO_EXPIRATION, NO_CAS, true);
-	}
-
-	/**
-	 * Replace one object to remote Xixibase server and watch its change. If this operation
-	 * is success, stone the object into local cache.
-	 * <pre>
-	 * 	if the object is exist in Xixibase server
-	 * 		update xixibase set xixibase.value = value
-	 * 							xixibase.expiration = expiration
-	 * 						where
-	 * 							xixibase.key = key
-	 * 	else
-	 * 		return 0;
-	 * </pre>
-	 * @param key
-	 * @param value
-	 * @param expiration
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
-	 */
-	public long replaceW(String key, Object value, int expiration) {
-		return client.replace(key, value, expiration, NO_CAS, true);
-	}
-
-	/**
-	 * Replace one object to remote Xixibase server and watch its change. If this operation
-	 * is success, stone the object into local cache.
-	 * <pre>
-	 * 	if the object is exist in Xixibase server
-	 * 		update xixibase set xixibase.value = value
-	 * 							xixibase.expiration = expiration
-	 * 						where
-	 * 							xixibase.key = key
-	 * 						and
-	 * 							xixibase.cacheID = cacheID
-	 * 	else
-	 * 		return 0;
-	 * </pre>
-	 * @param key
-	 * @param value
-	 * @param expiration
-	 * @param cacheID
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
-	 */
-	public long replaceW(String key, Object value, int expiration, long cacheID) {
-		return client.replace(key, value, expiration, cacheID, true);
-	}
-/*
-	public long createDelta(String key, long delta) {
-		return add(key, "" + delta, NO_EXPIRATION);
-	}
-	
-	public long createDelta(String key, long delta, int expiration) {
-		return add(key, "" + delta, expiration);
-	}
-	
-	public long setDelta(String key, long delta) {
-		return set(key, "" + delta, NO_EXPIRATION, NO_CAS);
-	}
-	
-	public long setDelta(String key, long delta, int expiration) {
-		return set(key, "" + delta, expiration, NO_CAS);
-	}
-	
-	public long setDelta(String key, long delta, int expiration, long cacheID) {
-		return set(key, "" + delta, expiration, cacheID);
-	}
-*/
-	
 	/**
 	 * Incr one number that in remote Xixibase server.
 	 * <pre>
@@ -468,55 +275,35 @@ public class CacheClient extends Defines {
 	 * @return <tt>null</tt> if operation failed, else return the DeltaItem
 	 */
 	public DeltaItem incr(String key) {
-		return client.incr(key, 1, NO_CAS);
+		return protocol.incr(key, 1, Defines.NO_CAS);
 	}
 
 	public DeltaItem incr(String key, long delta) {
-		return client.incr(key, delta, NO_CAS);
+		return protocol.incr(key, delta, Defines.NO_CAS);
 	}
 
 	public DeltaItem incr(String key, long delta, long cacheID) {
-		return client.incr(key, delta, cacheID);
+		return protocol.incr(key, delta, cacheID);
 	}
 
 	public DeltaItem decr(String key) {
-		return client.decr(key, 1, NO_CAS);
+		return protocol.decr(key, 1, Defines.NO_CAS);
 	}
 
 	public DeltaItem decr(String key, long delta) {
-		return client.decr(key, delta, NO_CAS);
+		return protocol.decr(key, delta, Defines.NO_CAS);
 	}
 
 	public DeltaItem decr(String key, long delta, long cacheID) {
-		return client.decr(key, delta, cacheID);
+		return protocol.decr(key, delta, cacheID);
 	}
 
+	public DeltaItem delta(String key, long delta, long cacheID) {
+		return protocol.delta(key, delta, cacheID);
+	}
+	
 	public Object get(String key) {
-		CacheItem item = client.get(key, 0, 0);
-		if (item != null) {
-			return item.getValue();
-		}
-		return null;
-	}
-
-	public Object getL(String key) {
-		CacheItem item = client.get(key, LOCAL_CACHE, 0);
-		if (item != null) {
-			return item.getValue();
-		}
-		return null;
-	}
-
-	public Object getW(String key) {
-		CacheItem item = client.get(key, WATCH_CACHE, 0);
-		if (item != null) {
-			return item.getValue();
-		}
-		return null;
-	}
-
-	public Object getLW(String key) {
-		CacheItem item = client.get(key, LOCAL_CACHE | WATCH_CACHE, 0);
+		CacheItem item = protocol.get(key, false, 0);
 		if (item != null) {
 			return item.getValue();
 		}
@@ -524,96 +311,74 @@ public class CacheClient extends Defines {
 	}
 
 	public CacheBaseItem getBase(String key) {
-		return client.getBase(key);
+		return protocol.getBase(key);
 	}
 	
+	public boolean exists(String key) {
+		return protocol.getBase(key) != null;
+	}
 	public boolean updateExpiration(String key, int expiration) {
-		return client.updateExpiration(key, expiration, NO_CAS);
+		return protocol.updateExpiration(key, expiration, Defines.NO_CAS);
 	}
 	
 	public boolean updateExpiration(String key, int expiration, long cacheID) {
-		return client.updateExpiration(key, expiration, cacheID);
+		return protocol.updateExpiration(key, expiration, cacheID);
 	}
 
 	protected boolean updateFlags(String key, int flags) {
-		return client.updateFlags(key, flags, NO_CAS);
+		return protocol.updateFlags(key, flags, Defines.NO_CAS);
 	}
 	
 	protected boolean updateFlags(String key, int flags, long cacheID) {
-		return client.updateFlags(key, flags, cacheID);
+		return protocol.updateFlags(key, flags, cacheID);
 	}
 	
 	public boolean keyExists(String key) {
-		return client.getBase(key) != null;
+		return protocol.getBase(key) != null;
 	}
 
 	public CacheItem gets(String key) {
-		return client.get(key, 0, 0);
+		return protocol.get(key, false, 0);
 	}
 
-	public CacheItem getsL(String key) {
-		return client.get(key, LOCAL_CACHE, 0);
-	}
-
-	public CacheItem getsW(String key) {
-		return client.get(key, WATCH_CACHE, 0);
-	}
-
-	public CacheItem getsLW(String key) {
-		return client.get(key, LOCAL_CACHE | WATCH_CACHE, 0);
-	}
-	
 	public CacheItem getAndTouch(String key, int expiration) {
-		return client.get(key, TOUCH_CACHE, expiration);
-	}
-
-	public CacheItem getAndTouchL(String key, int expiration) {
-		return client.get(key, LOCAL_CACHE | TOUCH_CACHE, expiration);
-	}
-
-	public CacheItem getAndTouchW(String key, int expiration) {
-		return client.get(key, WATCH_CACHE | TOUCH_CACHE, expiration);
-	}
-
-	public CacheItem getAndTouchLW(String key, int expiration) {
-		return client.get(key, LOCAL_CACHE | WATCH_CACHE | TOUCH_CACHE,
-				expiration);
+		return protocol.get(key, true, expiration);
 	}
 
 	public List<CacheItem> multiGet(List<String> keys) {
-		return client.multiGet(keys);
+		return protocol.multiGet(keys);
 	}
 	
 	public int multiSet(List<MultiUpdateItem> items) {
-		return client.multiSet(items);
+		return protocol.multiSet(items);
 	}
 	
 	public int multiAdd(List<MultiUpdateItem> items) {
-		return client.multiAdd(items);
+		return protocol.multiAdd(items);
 	}
 	
 	public int multiReplace(List<MultiUpdateItem> items) {
-		return client.multiReplace(items);
+		return protocol.multiReplace(items);
 	}
 	
 	public int multiAppend(List<MultiUpdateItem> items) {
-		return client.multiAppend(items);
+		return protocol.multiAppend(items);
 	}
 	
 	public int multiPrepend(List<MultiUpdateItem> items) {
-		return client.multiPrepend(items);
+		return protocol.multiPrepend(items);
 	}
 	
 	public int multiDelete(List<MultiDeleteItem> items) {
-		return client.multiDelete(items);
+		return protocol.multiDelete(items);
 	}
 	
 	public int flush() {
-		return client.flush();
+		return protocol.flush();
 	}
 
 	public int flush(String[] servers) {
-		return client.flush(servers);
+		return protocol.flush(servers);
 	}
 
 	/**
@@ -631,7 +396,7 @@ public class CacheClient extends Defines {
 	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
 	 */
 	public long append(String key, Object value) {
-		return client.append(key, value, NO_CAS);
+		return protocol.append(key, value, Defines.NO_CAS);
 	}
 
 	/**
@@ -652,7 +417,7 @@ public class CacheClient extends Defines {
 	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
 	 */
 	public long append(String key, Object value, long cacheID) {
-		return client.append(key, value, cacheID);
+		return protocol.append(key, value, cacheID);
 	}
 
 	/**
@@ -670,7 +435,7 @@ public class CacheClient extends Defines {
 	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
 	 */
 	public long prepend(String key, Object value) {
-		return client.prepend(key, value, NO_CAS);
+		return protocol.prepend(key, value, Defines.NO_CAS);
 	}
 
 	/**
@@ -691,20 +456,20 @@ public class CacheClient extends Defines {
 	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
 	 */
 	public long prepend(String key, Object value, long cacheID) {
-		return client.prepend(key, value, cacheID);
+		return protocol.prepend(key, value, cacheID);
 	}
 	
-	public boolean statsAddGroup(String[] servers, int groupID) {
-		return client.statsAddGroup(servers, groupID);
+	public boolean statsAddGroup(String[] servers, int groupId) {
+		return protocol.statsAddGroup(servers, groupId);
 	}
 	
-	public boolean statsRemoveGroup(String[] servers, int groupID) {
-		return client.statsRemoveGroup(servers, groupID);
+	public boolean statsRemoveGroup(String[] servers, int groupId) {
+		return protocol.statsRemoveGroup(servers, groupId);
 	}
 	
 	public Map<String, Map<String, String>> statsGetStats(String[] servers, byte class_id) {
 		Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
-		if (client.statsGetStats( servers, class_id, result)) {
+		if (protocol.statsGetStats( servers, class_id, result)) {
 			return result;
 		} else {
 			return null;
@@ -720,22 +485,23 @@ public class CacheClient extends Defines {
 		}
 	}
 */
-	public Map<String, Map<String, String>> statsGetGroupStats(String[] servers, int groupID, byte class_id) {
+	public Map<String, Map<String, String>> statsGetGroupStats(String[] servers, int groupId, byte class_id) {
 		Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
-		if (client.statsGetGroupStats(servers, groupID, class_id, result)) {
+		if (protocol.statsGetGroupStats(servers, groupId, class_id, result)) {
 			return result;
 		} else {
 			return null;
 		}
 	}
 /*
-	public Map<String, Map<String, String>> statsGetAndClearGroupStats(String[] servers, int groupID, byte class_id) {
+	public Map<String, Map<String, String>> statsGetAndClearGroupStats(String[] servers, int groupId, byte class_id) {
 		Map<String, Map<String, String>> result = new HashMap<String, Map<String, String>>();
-		if (client.statsGetAndClearGroupStats(servers, groupID, class_id, result)) {
+		if (client.statsGetAndClearGroupStats(servers, groupId, class_id, result)) {
 			return result;
 		} else {
 			return null;
 		}
 	}
 */
+	
 }
