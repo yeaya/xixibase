@@ -1,0 +1,16 @@
+# Xixibase
+
+[Unit]
+Description=Xixibase Cache server
+After=syslog.target
+After=network.target
+
+[Service]
+Type=simple
+User=tomcat
+Group=tomcat
+
+ExecStart=/opt/yeaya/xixibase/bin/xixibase -homedir /opt/yeaya/xixibase
+
+[Install]
+WantedBy=multi-user.target
