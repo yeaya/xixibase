@@ -485,7 +485,7 @@ public class LocalCacheTest {
 		item = cc.get("xixi");
 		assertNotNull(item);
 		d = item.getExpiration();
-		assertEquals(98, d);
+		assertTrue(97 <= d && d <= 98);
 		
 		item = xc.getAndTouch("xixi", 100);
 		assertNotNull(item);
