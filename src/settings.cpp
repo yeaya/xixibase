@@ -42,15 +42,17 @@ Settings::~Settings() {
 }
 
 bool Settings::init(const string& homedir) {
+	boost::system::error_code ec;
 	if (homedir.empty()) {
-		boost::filesystem::path currentPath = boost::filesystem::current_path();
-		fprintf(stdout, "current path:%s\n", currentPath.string().c_str());
-		home_dir = currentPath.parent_path().string();
+		boost::filesystem::path currentPath = boost::filesystem::current_path(ec);
+		if (!ec) {
+			fprintf(stdout, "current path:%s\n", currentPath.string().c_str());
+			home_dir = currentPath.parent_path().string();
+		}
 	} else {
 		boost::filesystem::path path(homedir);
 		bool result = boost::filesystem::is_directory(path);
 		if (result) {
-			boost::system::error_code ec;
 			boost::filesystem::path scp = boost::filesystem::system_complete(path, ec);
 			if (!ec) {
 				home_dir = scp.string();
