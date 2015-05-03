@@ -329,16 +329,16 @@ bool Server::start() {
 	LOG_INFO("Server::start use_certificate_chain_file");
 	boost::system::error_code err_code;
 
-	context_.use_certificate_chain_file(settings_.home_dir + "conf/cacert.pem", err_code);
+	context_.use_certificate_chain_file(settings_.home_dir + "conf/cert.pem", err_code);
 	if (err_code) {
-		LOG_FATAL("failed on use_certificate_chain_file, error:" << err_code.message());
+		LOG_FATAL("failed on use_certificate_chain_file[cert.pem], error:" << err_code.message());
 		return false;
 	}
 	LOG_INFO("Server::start use_private_key_file");
 
-	context_.use_private_key_file(settings_.home_dir + "conf/privkey.pem", boost::asio::ssl::context::pem, err_code);
+	context_.use_private_key_file(settings_.home_dir + "conf/key.pem", boost::asio::ssl::context::pem, err_code);
 	if (err_code) {
-		LOG_FATAL("failed on use_private_key_file, error:" << err_code.message());
+		LOG_FATAL("failed on use_private_key_file[key.pem], error:" << err_code.message());
 		return false;
 	}
 	LOG_INFO("Server::start init cache mgr");

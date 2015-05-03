@@ -4,10 +4,13 @@ project (xixibase)
 
 include_directories(
     src
-    /opt/local/include
+   # ../boost_1_58_0 # boost include
+    /opt/local/include # osx include
     3rd/tinyxml
     3rd/zlib)
-link_directories(/opt/local/lib)  
+link_directories(
+  #  ../boost_1_58_0/stage/lib # boost lib
+    /opt/local/lib) # osx lib
 add_executable(xixibase
     src/cache.cpp 
     src/currtime.cpp 
@@ -34,10 +37,10 @@ add_executable(xixibase
     3rd/tinyxml/tinyxmlerror.cpp
     3rd/tinyxml/tinyxmlparser.cpp)
 target_link_libraries(xixibase
-    boost_date_time-mt
-    boost_thread-mt
-    boost_filesystem-mt
-    boost_system-mt
+    boost_date_time
+    boost_thread
+    boost_filesystem
+    boost_system
     ssl
     crypto)
 SET_TARGET_PROPERTIES(xixibase PROPERTIES #表示生成的执行文件所在路径
