@@ -47,7 +47,7 @@ public class XixiClientImpl implements XixiClient {
 	 * @return groupId
 	 */
 	public int getGroupId() {
-		return protocol.getGroupID();
+		return protocol.getGroupId();
 	}
 	
 	/**
@@ -87,21 +87,21 @@ public class XixiClientImpl implements XixiClient {
 	}
 
 	/**
-	 * Delete one object from remote Xixibase server if the cacheID of the object
-	 * is equals with the specified cacheID.
+	 * Delete one object from remote Xixibase server if the cacheId of the object
+	 * is equals with the specified cacheId.
 	 * <pre>
 	 * 	delete from xixibase
 	 * 					where
 	 * 						xixibase.key = key
 	 * 					and
-	 * 						xixibase.cacheID = cacheID
+	 * 						xixibase.cacheId = cacheId
 	 * <pre>
 	 * @param key
-	 * @param cacheID
+	 * @param cacheId
 	 * @return <tt>true</tt> if operation success
 	 */
-	public boolean delete(String key, long cacheID) {
-		return protocol.delete(key, cacheID);
+	public boolean delete(String key, long cacheId) {
+		return protocol.delete(key, cacheId);
 	}
 
 	/**
@@ -117,7 +117,7 @@ public class XixiClientImpl implements XixiClient {
 	 * </pre>
 	 * @param key
 	 * @param value
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
+	 * @return <tt>0</tt> if operation failed, else return the cacheId of the object
 	 */
 	public long set(String key, Object value) {
 		return protocol.set(key, value, Defines.NO_EXPIRATION, Defines.NO_CAS);
@@ -137,7 +137,7 @@ public class XixiClientImpl implements XixiClient {
 	 * @param key
 	 * @param value
 	 * @param expiration second
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
+	 * @return <tt>0</tt> if operation failed, else return the cacheId of the object
 	 */
 	public long set(String key, Object value, int expiration) {
 		return protocol.set(key, value, expiration, Defines.NO_CAS);
@@ -152,18 +152,18 @@ public class XixiClientImpl implements XixiClient {
 	 * 						where
 	 * 							xixibase.key = key
 	 * 						and
-	 * 							xixibase.cacheID = cacheID
+	 * 							xixibase.cacheId = cacheId
 	 * 	else
 	 * 		insert xixibase(key, value, expiration) values(key, value, expiration);
 	 * </pre>
 	 * @param key
 	 * @param value
 	 * @param expiration second
-	 * @param cacheID
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
+	 * @param cacheId
+	 * @return <tt>0</tt> if operation failed, else return the cacheId of the object
 	 */
-	public long set(String key, Object value, int expiration, long cacheID) {
-		return protocol.set(key, value, expiration, cacheID);
+	public long set(String key, Object value, int expiration, long cacheId) {
+		return protocol.set(key, value, expiration, cacheId);
 	}
 
 	/**
@@ -176,7 +176,7 @@ public class XixiClientImpl implements XixiClient {
 	 * </pre>
 	 * @param key
 	 * @param value
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
+	 * @return <tt>0</tt> if operation failed, else return the cacheId of the object
 	 */
 	public long add(String key, Object value) {
 		return protocol.add(key, value, Defines.NO_EXPIRATION);
@@ -193,7 +193,7 @@ public class XixiClientImpl implements XixiClient {
 	 * @param key
 	 * @param value
 	 * @param expiration
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
+	 * @return <tt>0</tt> if operation failed, else return the cacheId of the object
 	 */
 	public long add(String key, Object value, int expiration) {
 		return protocol.add(key, value, expiration);
@@ -212,7 +212,7 @@ public class XixiClientImpl implements XixiClient {
 	 * </pre>
 	 * @param key
 	 * @param value
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
+	 * @return <tt>0</tt> if operation failed, else return the cacheId of the object
 	 */
 	public long replace(String key, Object value) {
 		return protocol.replace(key, value, Defines.NO_EXPIRATION, Defines.NO_CAS);
@@ -232,7 +232,7 @@ public class XixiClientImpl implements XixiClient {
 	 * @param key
 	 * @param value
 	 * @param expiration second
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
+	 * @return <tt>0</tt> if operation failed, else return the cacheId of the object
 	 */
 	public long replace(String key, Object value, int expiration) {
 		return protocol.replace(key, value, expiration, Defines.NO_CAS);
@@ -247,18 +247,18 @@ public class XixiClientImpl implements XixiClient {
 	 * 						where
 	 * 							xixibase.key = key
 	 * 						and
-	 * 							xixibase.cacheID = cacheID
+	 * 							xixibase.cacheId = cacheId
 	 * 	else
 	 * 		return 0;
 	 * </pre>
 	 * @param key
 	 * @param value
 	 * @param expiration second
-	 * @param cacheID
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
+	 * @param cacheId
+	 * @return <tt>0</tt> if operation failed, else return the cacheId of the object
 	 */
-	public long replace(String key, Object value, int expiration, long cacheID) {
-		return protocol.replace(key, value, expiration, cacheID);
+	public long replace(String key, Object value, int expiration, long cacheId) {
+		return protocol.replace(key, value, expiration, cacheId);
 	}
 
 	/**
@@ -282,8 +282,8 @@ public class XixiClientImpl implements XixiClient {
 		return protocol.incr(key, delta, Defines.NO_CAS);
 	}
 
-	public DeltaItem incr(String key, long delta, long cacheID) {
-		return protocol.incr(key, delta, cacheID);
+	public DeltaItem incr(String key, long delta, long cacheId) {
+		return protocol.incr(key, delta, cacheId);
 	}
 
 	public DeltaItem decr(String key) {
@@ -294,15 +294,15 @@ public class XixiClientImpl implements XixiClient {
 		return protocol.decr(key, delta, Defines.NO_CAS);
 	}
 
-	public DeltaItem decr(String key, long delta, long cacheID) {
-		return protocol.decr(key, delta, cacheID);
+	public DeltaItem decr(String key, long delta, long cacheId) {
+		return protocol.decr(key, delta, cacheId);
 	}
 
-	public DeltaItem delta(String key, long delta, long cacheID) {
-		return protocol.delta(key, delta, cacheID);
+	public DeltaItem delta(String key, long delta, long cacheId) {
+		return protocol.delta(key, delta, cacheId);
 	}
 	
-	public Object get(String key) {
+	public Object getValue(String key) {
 		CacheItem item = protocol.get(key, false, 0);
 		if (item != null) {
 			return item.getValue();
@@ -321,23 +321,23 @@ public class XixiClientImpl implements XixiClient {
 		return protocol.updateExpiration(key, expiration, Defines.NO_CAS);
 	}
 	
-	public boolean updateExpiration(String key, int expiration, long cacheID) {
-		return protocol.updateExpiration(key, expiration, cacheID);
+	public boolean updateExpiration(String key, int expiration, long cacheId) {
+		return protocol.updateExpiration(key, expiration, cacheId);
 	}
 
 	protected boolean updateFlags(String key, int flags) {
 		return protocol.updateFlags(key, flags, Defines.NO_CAS);
 	}
 	
-	protected boolean updateFlags(String key, int flags, long cacheID) {
-		return protocol.updateFlags(key, flags, cacheID);
+	protected boolean updateFlags(String key, int flags, long cacheId) {
+		return protocol.updateFlags(key, flags, cacheId);
 	}
 	
 	public boolean keyExists(String key) {
 		return protocol.getBase(key) != null;
 	}
 
-	public CacheItem gets(String key) {
+	public CacheItem get(String key) {
 		return protocol.get(key, false, 0);
 	}
 
@@ -393,7 +393,7 @@ public class XixiClientImpl implements XixiClient {
 	 * </pre>
 	 * @param key
 	 * @param value
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
+	 * @return <tt>0</tt> if operation failed, else return the cacheId of the object
 	 */
 	public long append(String key, Object value) {
 		return protocol.append(key, value, Defines.NO_CAS);
@@ -407,17 +407,17 @@ public class XixiClientImpl implements XixiClient {
 	 * 						where
 	 * 							xixibase.key = key
 	 * 						and
-	 * 							xixibase.cacheID = cacheID
+	 * 							xixibase.cacheId = cacheId
 	 * 	else
 	 * 		return 0;
 	 * </pre>
 	 * @param key
 	 * @param value
 	 * @param expiration second
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
+	 * @return <tt>0</tt> if operation failed, else return the cacheId of the object
 	 */
-	public long append(String key, Object value, long cacheID) {
-		return protocol.append(key, value, cacheID);
+	public long append(String key, Object value, long cacheId) {
+		return protocol.append(key, value, cacheId);
 	}
 
 	/**
@@ -432,7 +432,7 @@ public class XixiClientImpl implements XixiClient {
 	 * </pre>
 	 * @param key
 	 * @param value
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
+	 * @return <tt>0</tt> if operation failed, else return the cacheId of the object
 	 */
 	public long prepend(String key, Object value) {
 		return protocol.prepend(key, value, Defines.NO_CAS);
@@ -446,17 +446,17 @@ public class XixiClientImpl implements XixiClient {
 	 * 						where
 	 * 							xixibase.key = key
 	 * 						and
-	 * 							xixibase.cacheID = cacheID
+	 * 							xixibase.cacheId = cacheId
 	 * 	else
 	 * 		return 0;
 	 * </pre>
 	 * @param key
 	 * @param value
 	 * @param expiration second
-	 * @return <tt>0</tt> if operation failed, else return the cacheID of the object
+	 * @return <tt>0</tt> if operation failed, else return the cacheId of the object
 	 */
-	public long prepend(String key, Object value, long cacheID) {
-		return protocol.prepend(key, value, cacheID);
+	public long prepend(String key, Object value, long cacheId) {
+		return protocol.prepend(key, value, cacheId);
 	}
 	
 	public boolean statsAddGroup(String[] servers, int groupId) {

@@ -35,27 +35,27 @@ public class Group  {
 		int groupId1 = 1;
 		int groupId2 = 2;
 		
-		XixiClient cc1 = manager.createXixiClient(groupId1);
-		XixiClient cc2 = manager.createXixiClient(groupId2);
+		XixiClient cc1 = manager.createClient(groupId1);
+		XixiClient cc2 = manager.createClient(groupId2);
 		
 		cc1.set("key", "value1");
 		cc2.set("key", "value2");
 		
-		System.out.println(cc1.get("key"));
-		System.out.println(cc2.get("key"));
+		System.out.println(cc1.getValue("key"));
+		System.out.println(cc2.getValue("key"));
 		
 		cc1.delete("key");
 		
-		System.out.println(cc1.get("key"));
-		System.out.println(cc2.get("key"));
+		System.out.println(cc1.getValue("key"));
+		System.out.println(cc2.getValue("key"));
 		
 		cc1.set("key", "value1B");
 		cc2.set("key", "value2B");
 		
 		cc2.flush();
 		
-		System.out.println(cc1.get("key"));
-		System.out.println(cc2.get("key"));
+		System.out.println(cc1.getValue("key"));
+		System.out.println(cc2.getValue("key"));
 		
 		cc1.flush();
 		cc2.flush();

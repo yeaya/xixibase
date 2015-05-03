@@ -2,6 +2,6 @@ package com.yeaya.xixibase.xixiclient;
 
 public class WatchResult {
 	public int sequence;
-	public long[] cacheIDs;
+	public long[] cacheIds;
 	public byte[] types;
 }

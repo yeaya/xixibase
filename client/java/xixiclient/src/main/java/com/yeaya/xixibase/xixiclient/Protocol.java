@@ -53,13 +53,15 @@ public class Protocol extends Defines {
 	public Protocol(XixiClientManager manager, SocketManager socketManager, int groupId, boolean enableLocalCache) {
 		this.manager = manager;
 		this.socketManager = socketManager;
-		manager.openLocalCache();
+		if (enableLocalCache) {
+			manager.openLocalCache();
+		}
 		this.localCache = manager.getLocalCache();
 		this.groupId = groupId;
 		this.enableLocalCache = enableLocalCache;
 	}
 
-	public int getGroupID() {
+	public int getGroupId() {
 		return groupId;
 	}
 
@@ -95,7 +97,7 @@ public class Protocol extends Defines {
 //		}
 
 		CacheItem item = null;
-		int watchID = 0;
+		int watchId = 0;
 		if (enableLocalCache) {
 			if (touch) {
 				item = localCache.getAndTouch(host, groupId, key, expiration);
@@ -107,7 +109,7 @@ public class Protocol extends Defines {
 			}
 		}
 		if (enableLocalCache) {
-			watchID = localCache.getWatchID(host);
+			watchId = localCache.getWatchId(host);
 		}
 		
 		XixiSocket socket = socketManager.getSocket(key);
@@ -124,12 +126,12 @@ public class Protocol extends Defines {
 			if (touch) {
 				writeBuffer.put(XIXI_TYPE_GET_TOUCH_REQ);
 				writeBuffer.putInt(groupId); // groupId
-				writeBuffer.putInt(watchID); // watchID
+				writeBuffer.putInt(watchId); // watchId
 				writeBuffer.putInt(expiration);
 			} else {
 				writeBuffer.put(XIXI_TYPE_GET_REQ);
 				writeBuffer.putInt(groupId); // groupId
-				writeBuffer.putInt(watchID); // watchID
+				writeBuffer.putInt(watchId); // watchId
 			}
 			writeBuffer.putShort((short) keyBuf.length);
 			writeBuffer.put(keyBuf);
@@ -138,7 +140,7 @@ public class Protocol extends Defines {
 			byte category = socket.readByte();
 			byte type = socket.readByte();
 			if (category == XIXI_CATEGORY_CACHE && type == XIXI_TYPE_GET_RES) {
-				long cacheID = socket.readLong();//uint64_t cacheID;
+				long cacheId = socket.readLong();//uint64_t cacheId;
 				int flags = socket.readInt();
 				expiration = socket.readInt();
 				int dataSize = socket.readInt();//uint32_t data_length;
@@ -148,14 +150,14 @@ public class Protocol extends Defines {
 					Object obj = transCoder.decode(data, flags, objectSize);
 					item = new CacheItem(
 							key,
-							cacheID,
+							cacheId,
 							expiration,
 							groupId,
 							flags,
 							obj,
 							objectSize[0],
 							dataSize);
-					if (watchID != 0) {
+					if (watchId != 0) {
 						localCache.put(socket.getHost(), key, item);
 					}
 					return item;
@@ -219,13 +221,13 @@ public class Protocol extends Defines {
 			byte category = socket.readByte();
 			byte type = socket.readByte();
 			if (category == XIXI_CATEGORY_CACHE && type == XIXI_TYPE_GET_BASE_RES) {
-				long cacheID = socket.readLong();
+				long cacheId = socket.readLong();
 				int flags = socket.readInt();
 				int expiration = socket.readInt();
 				int valueSize = socket.readInt();
 				CacheBaseItem item = new CacheBaseItem(
 						key,
-						cacheID,
+						cacheId,
 						expiration,
 						groupId,
 						flags,
@@ -254,15 +256,15 @@ public class Protocol extends Defines {
 		return null;
 	}
 /*
-	public boolean updateFlags(String key, long cacheID, int groupId, int flags) {
-		return updateFlags(XIXI_UPDATE_BASE_SUB_OP_FLAGS, key, cacheID, groupId, flags);
+	public boolean updateFlags(String key, long cacheId, int groupId, int flags) {
+		return updateFlags(XIXI_UPDATE_BASE_SUB_OP_FLAGS, key, cacheId, groupId, flags);
 	}
 	*/
-//	public boolean updateExpiration(String key, long cacheID, int groupId, int expiration) {
-//		return updateFlags((byte)2/*XIXI_UPDATE_BASE_SUB_OP_EXPIRATION*/, key, cacheID, groupId, 0, expiration);
+//	public boolean updateExpiration(String key, long cacheId, int groupId, int expiration) {
+//		return updateFlags((byte)2/*XIXI_UPDATE_BASE_SUB_OP_EXPIRATION*/, key, cacheId, groupId, 0, expiration);
 //	}
 
-	protected boolean updateFlags(String key, int flags, long cacheID) {
+	protected boolean updateFlags(String key, int flags, long cacheId) {
 		lastError = null;
 		if (key == null) {
 			lastError = "updateFlags, key == null";
@@ -291,7 +293,7 @@ public class Protocol extends Defines {
 			writeBuffer.put(XIXI_CATEGORY_CACHE);
 			writeBuffer.put(XIXI_TYPE_UPDATE_FLAGS_REQ);
 			writeBuffer.put(subOp);
-			writeBuffer.putLong(cacheID);
+			writeBuffer.putLong(cacheId);
 			writeBuffer.putInt(groupId);
 			writeBuffer.putInt(flags);
 			writeBuffer.putShort((short) keyBuf.length);
@@ -301,7 +303,7 @@ public class Protocol extends Defines {
 			byte category = socket.readByte();
 			byte type = socket.readByte();
 			if (category == XIXI_CATEGORY_CACHE && type == XIXI_TYPE_UPDATE_FLAGS_RES) {
-				socket.readLong(); // rescacheID
+				socket.readLong(); // rescacheId
 				localCache.remove(socket.getHost(), groupId, key);
 				return true;
 			} else {
@@ -327,7 +329,7 @@ public class Protocol extends Defines {
 		return false;
 	}
 	
-	public boolean updateExpiration(String key, int expiration, long cacheID) {
+	public boolean updateExpiration(String key, int expiration, long cacheId) {
 		lastError = null;
 		if (key == null) {
 			lastError = "updateExpiration, key == null";
@@ -356,7 +358,7 @@ public class Protocol extends Defines {
 			writeBuffer.put(XIXI_CATEGORY_CACHE);
 			writeBuffer.put(XIXI_TYPE_UPDATE_EXPIRATION_REQ);
 			writeBuffer.put(subOp);
-			writeBuffer.putLong(cacheID);
+			writeBuffer.putLong(cacheId);
 			writeBuffer.putInt(groupId);
 			writeBuffer.putInt(expiration);
 			writeBuffer.putShort((short) keyBuf.length);
@@ -366,7 +368,7 @@ public class Protocol extends Defines {
 			byte category = socket.readByte();
 			byte type = socket.readByte();
 			if (category == XIXI_CATEGORY_CACHE && type == XIXI_TYPE_UPDATE_EXPIRATION_RES) {
-				socket.readLong(); // cacheID
+				socket.readLong(); // cacheId
 				localCache.remove(socket.getHost(), groupId, key);
 				return true;
 			} else {
@@ -396,23 +398,23 @@ public class Protocol extends Defines {
 		return update(XIXI_UPDATE_SUB_OP_ADD, key, value, expiration, NO_CAS);
 	}
 
-	public long append(String key, Object value, long cacheID) {
-		return update(XIXI_UPDATE_SUB_OP_APPEND, key, value, NO_EXPIRATION, cacheID);
+	public long append(String key, Object value, long cacheId) {
+		return update(XIXI_UPDATE_SUB_OP_APPEND, key, value, NO_EXPIRATION, cacheId);
 	}
 
-	public long set(String key, Object value, int expiration, long cacheID) {
-		return update(XIXI_UPDATE_SUB_OP_SET, key, value, expiration, cacheID);
+	public long set(String key, Object value, int expiration, long cacheId) {
+		return update(XIXI_UPDATE_SUB_OP_SET, key, value, expiration, cacheId);
 	}
 
-	public long prepend(String key, Object value, long cacheID) {
-		return update(XIXI_UPDATE_SUB_OP_PREPEND, key, value, NO_EXPIRATION, cacheID);
+	public long prepend(String key, Object value, long cacheId) {
+		return update(XIXI_UPDATE_SUB_OP_PREPEND, key, value, NO_EXPIRATION, cacheId);
 	}
 
-	public long replace(String key, Object value, int expiration, long cacheID) {
-		return update(XIXI_UPDATE_SUB_OP_REPLACE, key, value, expiration, cacheID);
+	public long replace(String key, Object value, int expiration, long cacheId) {
+		return update(XIXI_UPDATE_SUB_OP_REPLACE, key, value, expiration, cacheId);
 	}
 
-	private long update(byte subOp, String key, Object value, int expiration, long cacheID) {
+	private long update(byte subOp, String key, Object value, int expiration, long cacheId) {
 		lastError = null;
 		if (key == null) {
 			lastError = "update, key == null";
@@ -442,9 +444,9 @@ public class Protocol extends Defines {
 
 		try {
 			byte op_flag = (byte)(subOp | XIXI_UPDATE_REPLY);
-			int watchID = 0;
+			int watchId = 0;
 			if (enableLocalCache) {
-				watchID = localCache.getWatchID(socket.getHost());
+				watchId = localCache.getWatchId(socket.getHost());
 			}
 
 			int[] outflags = new int[1];
@@ -458,11 +460,11 @@ public class Protocol extends Defines {
 			writeBuffer.put(XIXI_CATEGORY_CACHE);
 			writeBuffer.put(XIXI_TYPE_UPDATE_REQ);
 			writeBuffer.put(op_flag);
-			writeBuffer.putLong(cacheID);//uint64_t cacheID;
+			writeBuffer.putLong(cacheId);//uint64_t cacheId;
 			writeBuffer.putInt(groupId);
 			writeBuffer.putInt(flags); // flags
 			writeBuffer.putInt(expiration);//			uint32_t expiration;
-			writeBuffer.putInt(watchID);
+			writeBuffer.putInt(watchId);
 			writeBuffer.putShort((short) keyBuf.length); // uint16_t key_length;
 
 			writeBuffer.putInt(dataSize); // uint32_t data_length;
@@ -474,12 +476,12 @@ public class Protocol extends Defines {
 			byte category = socket.readByte();
 			byte type = socket.readByte();
 			if (category == XIXI_CATEGORY_CACHE && type == XIXI_TYPE_UPDATE_RES) {
-				long newCacheID = socket.readLong();
+				long newCacheId = socket.readLong();
 				localCache.remove(socket.getHost(), groupId, key);
-				if (watchID != 0) {
+				if (watchId != 0) {
 					CacheItem item = new CacheItem(
 							key,
-							newCacheID,
+							newCacheId,
 							expiration,
 							groupId,
 							flags,
@@ -488,7 +490,7 @@ public class Protocol extends Defines {
 							dataSize);
 					localCache.put(socket.getHost(), key, item);
 				}
-				return newCacheID;
+				return newCacheId;
 			} else {
 				short reason = socket.readShort();
 				lastError = "update, response error, reason=" + reason;
@@ -513,7 +515,7 @@ public class Protocol extends Defines {
 		return NO_CAS;
 	}
 
-	public boolean delete(String key, long cacheID) {
+	public boolean delete(String key, long cacheId) {
 		lastError = null;
 		if (key == null) {
 			lastError = "delete, key == null"; 
@@ -542,7 +544,7 @@ public class Protocol extends Defines {
 			writeBuffer.put(XIXI_CATEGORY_CACHE);
 			writeBuffer.put(XIXI_TYPE_DELETE_REQ);
 			writeBuffer.put(op_flag);
-			writeBuffer.putLong(cacheID); // cacheID
+			writeBuffer.putLong(cacheId); // cacheId
 			writeBuffer.putInt(groupId); // groupId
 			writeBuffer.putShort((short) keyBuf.length);
 			writeBuffer.put(keyBuf);
@@ -577,23 +579,23 @@ public class Protocol extends Defines {
 		return false;
 	}
 
-	public DeltaItem incr(String key, long delta, long cacheID) {
-		return delta(key, XIXI_DELTA_SUB_OP_INCR, delta, cacheID);
+	public DeltaItem incr(String key, long delta, long cacheId) {
+		return delta(key, XIXI_DELTA_SUB_OP_INCR, delta, cacheId);
 	}
 
-	public DeltaItem decr(String key, long delta, long cacheID) {
-		return delta(key, XIXI_DELTA_SUB_OP_DECR, delta, cacheID);
+	public DeltaItem decr(String key, long delta, long cacheId) {
+		return delta(key, XIXI_DELTA_SUB_OP_DECR, delta, cacheId);
 	}
 
-	protected DeltaItem delta(String key, long delta, long cacheID) {
+	protected DeltaItem delta(String key, long delta, long cacheId) {
 		if (delta >= 0) {
-			return delta(key, XIXI_DELTA_SUB_OP_INCR, delta, cacheID);
+			return delta(key, XIXI_DELTA_SUB_OP_INCR, delta, cacheId);
 		} else {
-			return delta(key, XIXI_DELTA_SUB_OP_DECR, -delta, cacheID);
+			return delta(key, XIXI_DELTA_SUB_OP_DECR, -delta, cacheId);
 		}
 	}
 	
-	private DeltaItem delta(String key, byte subOp, long delta, long cacheID) {
+	private DeltaItem delta(String key, byte subOp, long delta, long cacheId) {
 		lastError = null;
 		if (key == null) {
 			lastError = "delta, key == null";
@@ -622,7 +624,7 @@ public class Protocol extends Defines {
 			writeBuffer.put(XIXI_CATEGORY_CACHE);
 			writeBuffer.put(XIXI_TYPE_DETLA_REQ);
 			writeBuffer.put(op_flag);
-			writeBuffer.putLong(cacheID); // cacheID
+			writeBuffer.putLong(cacheId); // cacheId
 			writeBuffer.putInt(groupId); // groupId
 			writeBuffer.putLong(delta); // delta
 			writeBuffer.putShort((short) keyBuf.length);// key size
@@ -632,11 +634,11 @@ public class Protocol extends Defines {
 			byte category = socket.readByte();
 			byte type = socket.readByte();
 			if (category == XIXI_CATEGORY_CACHE && type == XIXI_TYPE_DETLA_RES) {
-				cacheID = socket.readLong();//uint64_t ;
+				cacheId = socket.readLong();//uint64_t ;
 				long value = socket.readLong();
 				localCache.remove(socket.getHost(), groupId, key);
 				DeltaItem item = new DeltaItem();
-				item.cacheID = cacheID;
+				item.cacheId = cacheId;
 				item.value = value;
 				return item;
 			} else {
@@ -913,13 +915,13 @@ public class Protocol extends Defines {
 			writeBuffer.putInt(groupId);
 			writeBuffer.putInt(maxNextCheckInterval);
 			socket.flush();
-		//	log.debug("localCache createWatch " + host + " watchID2=" + watchID);
+		//	log.debug("localCache createWatch " + host + " watchId2=" + watchId);
 
 			byte category = socket.readByte();
 			byte type = socket.readByte();
 			if (category == XIXI_CATEGORY_CACHE && type == XIXI_CREATE_WATCH_RES) {
-				int watchID = socket.readInt();
-				return watchID;
+				int watchId = socket.readInt();
+				return watchId;
 			} else {
 				short reason = socket.readShort();
 				lastError = "createWatch, response error, reason=" + reason;
@@ -943,7 +945,7 @@ public class Protocol extends Defines {
 		return 0;
 	}
 	
-	protected WatchResult checkWatch(String host, int watchID, int checkTimeout, int maxNextCheckInterval, int ackSequence) {
+	protected WatchResult checkWatch(String host, int watchId, int checkTimeout, int maxNextCheckInterval, int ackSequence) {
 		lastError = null;
 		XixiSocket socket = socketManager.getSocketByHost(host);
 		if (socket == null) {
@@ -957,7 +959,7 @@ public class Protocol extends Defines {
 			writeBuffer.put(XIXI_CATEGORY_CACHE);
 			writeBuffer.put(XIXI_CHECK_WATCH_REQ);
 			writeBuffer.putInt(groupId);
-			writeBuffer.putInt(watchID);
+			writeBuffer.putInt(watchId);
 			writeBuffer.putInt(checkTimeout);
 			writeBuffer.putInt(maxNextCheckInterval);
 			writeBuffer.putInt(ackSequence);
@@ -969,10 +971,10 @@ public class Protocol extends Defines {
 				WatchResult wr = new WatchResult();
 				wr.sequence = socket.readInt();
 				int updateCount = socket.readInt();
-				wr.cacheIDs = new long[updateCount];
+				wr.cacheIds = new long[updateCount];
 				wr.types = new byte[updateCount];
 				for (int i = 0; i < updateCount; i++) {
-					wr.cacheIDs[i] = socket.readLong();
+					wr.cacheIds[i] = socket.readLong();
 					wr.types[i] = socket.readByte();
 				}
 				return wr;

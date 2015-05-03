@@ -95,7 +95,7 @@ class TestCase1 implements Runable {
 		
 		String mgrName = "stresstest";
 		XixiClientManager mgr = XixiClientManager.getInstance(mgrName);
-		cc = mgr.createXixiClient();
+		cc = mgr.createClient();
 	}
 	
 	public boolean run() {
@@ -156,9 +156,9 @@ class TestCase1 implements Runable {
 
 		for (int i = 0; i < bachCount && readpos < cachepos && maxGetCount > 0; i++, readpos++, maxGetCount--) {
 			String mykey = key + readpos;
-			if (cc.get(mykey) == null) {
+			if (cc.getValue(mykey) == null) {
 				System.out.println("id=" + id + " get error, key=" + mykey);
-				if (cc.get(mykey) == null) {
+				if (cc.getValue(mykey) == null) {
 					System.out.println("again id=" + id + " get error, key=" + mykey);
 				} else {
 					System.out.println("again id=" + id + " get ok, key=" + mykey);
@@ -188,7 +188,7 @@ public class StressTest {
 		mgr.setNoDelay(true);
 		mgr.initialize(serverlist, enableSSL);
 		
-		XixiClient cc = mgr.createXixiClient();
+		XixiClient cc = mgr.createClient();
 		cc.flush();
 		
 		ArrayList<TestWork> worklist = new ArrayList<TestWork>();

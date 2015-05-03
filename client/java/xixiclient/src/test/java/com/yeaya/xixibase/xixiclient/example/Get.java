@@ -20,7 +20,7 @@ import com.yeaya.xixibase.xixiclient.XixiClientManager;
 import com.yeaya.xixibase.xixiclient.CacheItem;
 import com.yeaya.xixibase.xixiclient.XixiClient;
 
-public class Gets  {
+public class Get  {
 
 	public static void main(String[] args) {
 		String servers = "localhost:7788";
@@ -33,21 +33,21 @@ public class Gets  {
 		XixiClientManager manager = XixiClientManager.getInstance("example");
 		manager.initialize(serverlist);
 		
-		XixiClient cc = manager.createXixiClient();
+		XixiClient cc = manager.createClient();
 		
 		cc.set("key", "value1");
-		CacheItem item1 = cc.gets("key");
+		CacheItem item1 = cc.get("key");
 		System.out.println(item1.getValue());
 		
 		cc.set("key", "value2");
-		CacheItem item2 = cc.gets("key");
+		CacheItem item2 = cc.get("key");
 		System.out.println(item2.getValue());
 
-		cc.set("key", "value3", 0, item1.getCacheID());
-		System.out.println(cc.get("key"));
+		cc.set("key", "value3", 0, item1.getCacheId());
+		System.out.println(cc.getValue("key"));
 		
-		cc.set("key", "value4", 0, item2.getCacheID());
-		System.out.println(cc.get("key"));
+		cc.set("key", "value4", 0, item2.getCacheId());
+		System.out.println(cc.getValue("key"));
 
 		cc.flush();
 		

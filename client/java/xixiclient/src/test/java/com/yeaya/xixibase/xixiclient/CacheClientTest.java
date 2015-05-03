@@ -13,14 +13,17 @@ import java.util.Properties;
 import java.util.Map.Entry;
 import java.lang.Integer;
 
+import static org.junit.Assert.*;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.yeaya.xixibase.xixiclient.util.CurrentTick;
 
-import junit.framework.TestCase;
-
-public class CacheClientTest extends TestCase {
+public class CacheClientTest {
 	final static Logger log = LoggerFactory.getLogger(CacheClientTest.class);
 
 	private static final String managerName1 = "manager1";
@@ -53,21 +56,22 @@ public class CacheClientTest extends TestCase {
 	//	mgr1.enableLocalCache();
 	}
 
-	protected void setUp() throws Exception {
-		super.setUp();
+	@Before
+	public void setUp() throws Exception {
 		XixiClientManager mgr1 = XixiClientManager.getInstance(managerName1);
-		cc1 = mgr1.createXixiClient();
+		cc1 = mgr1.createClient();
 	}
 
-	protected void tearDown() throws Exception {
-		super.tearDown();
+	@After
+	public void tearDown() throws Exception {
 		assertNotNull(cc1);
 		cc1.flush();
 	}
 
+	@Test
 	public void testFlush() {
-		XixiClient cca = mgr1.createXixiClient(3);
-		XixiClient ccb = mgr1.createXixiClient(15);
+		XixiClient cca = mgr1.createClient(3);
+		XixiClient ccb = mgr1.createClient(15);
 		cca.set("xixi1", "0315");
 		ccb.set("xixi2", "20080315");
 		int count = cca.flush();
@@ -78,6 +82,7 @@ public class CacheClientTest extends TestCase {
 		assertFalse(ccb.exists("xixi2"));
 	}
 	
+	@Test
 	public void testFlush2() {
 		assertTrue(serverlist.length > 1);
 		ArrayList<String> keys = new ArrayList<String>();
@@ -96,7 +101,7 @@ public class CacheClientTest extends TestCase {
 			int flushCount = cc1.flush(sl);
 			int count = 0;
 			for (int j = 0; j < 100; j++) {
-				if (cc1.get("xixi" + j) == null) {
+				if (cc1.getValue("xixi" + j) == null) {
 					count++;				
 				}
 			}
@@ -108,6 +113,7 @@ public class CacheClientTest extends TestCase {
 		assertEquals(100, lastCount);
 	}
 	
+	@Test
 	public void testFlushError() {
 		String[] svrList = new String[0];
 		cc1.set("xixi", "0315");
@@ -122,21 +128,22 @@ public class CacheClientTest extends TestCase {
 	//	mgr1.enableLocalCache();
 	}
 	
+	@Test
 	public void testGetError() {
-		assertNull(cc1.get(null));
+		assertNull(cc1.getValue(null));
 		long ret = cc1.set("xixi", "value");
 		assertTrue(ret != 0);
-		assertEquals("value", cc1.get("xixi"));
-		assertNull(cc1.get("xixi2"));
+		assertEquals("value", cc1.getValue("xixi"));
+		assertNull(cc1.getValue("xixi2"));
 		String cn = cc1.getTransCoder().getEncodingCharsetName();
 		boolean isSanitizeKeys = cc1.getTransCoder().isSanitizeKeys(); 
 		cc1.getTransCoder().setSanitizeKeys(true);
 		cc1.getTransCoder().setEncodingCharsetName("errorCharsetName");
-		assertNull(cc1.get("xixi"));
+		assertNull(cc1.getValue("xixi"));
 		cc1.getTransCoder().setSanitizeKeys(isSanitizeKeys);
 		mgr1.shutdown();
 		cc1.getTransCoder().setEncodingCharsetName(cn);
-		assertNull(cc1.get("xixi"));
+		assertNull(cc1.getValue("xixi"));
 	//	assertNull(cc1.getL("xixi"));
 		
 		mgr1 = XixiClientManager.getInstance(managerName1);
@@ -145,33 +152,35 @@ public class CacheClientTest extends TestCase {
 	//	mgr1.enableLocalCache();
 	}
 	
+	@Test
 	public void testGroup() {
-		XixiClient cca = mgr1.createXixiClient(3);
-		XixiClient ccb = mgr1.createXixiClient(15);
-	//	int groupId = cc1.getGroupID();
-//		cc1.setGroupID(3);
+		XixiClient cca = mgr1.createClient(3);
+		XixiClient ccb = mgr1.createClient(15);
+	//	int groupId = cc1.getGroupId();
+//		cc1.setGroupId(3);
 		cca.set("xixi", "group3");
-//		ccb.setGroupID(15);
+//		ccb.setGroupId(15);
 		ccb.set("xixi", "group15");
 
-	//	cc1.setGroupID(3);
-		assertEquals("group3", cca.get("xixi"));
-	//	cc1.setGroupID(15);
-		assertEquals("group15", ccb.get("xixi"));
+	//	cc1.setGroupId(3);
+		assertEquals("group3", cca.getValue("xixi"));
+	//	cc1.setGroupId(15);
+		assertEquals("group15", ccb.getValue("xixi"));
 		
-//		cc1.setGroupID(3);
+//		cc1.setGroupId(3);
 		int count = cca.flush();
 		assertEquals(1, count);
-//		cc1.setGroupID(15);
+//		cc1.setGroupId(15);
 		count = ccb.flush();
 		assertEquals(1, count);
 		
-//		cc1.setGroupID(groupId);
+//		cc1.setGroupId(groupId);
 		
 		assertNull(cca.getLastError());
 		assertNull(ccb.getLastError());
 	}
 
+	@Test
 	public void testObjectTransCoderEncode() {
 		int myInt = 0x12345678;
 		byte[] b = ObjectTransCoder.encodeInt(myInt);
@@ -184,6 +193,7 @@ public class CacheClientTest extends TestCase {
 		assertEquals(longValue, myLong);
 	}
 	
+	@Test
 	public void testTransCoder() {
 		TransCoder oldCoder = cc1.getTransCoder();
 		TransCoder coder = new ObjectTransCoder() {
@@ -194,68 +204,75 @@ public class CacheClientTest extends TestCase {
 		};
 		cc1.setTransCoder(coder);
 		cc1.set("xixi", "testTransCoder");
-		assertEquals("testTransCoder", cc1.get("xixi"));
+		assertEquals("testTransCoder", cc1.getValue("xixi"));
 		cc1.setTransCoder(oldCoder);
 	}
 
+	@Test
 	public void testDelete() {
 		cc1.set("xixi", Boolean.TRUE);
-		Boolean b = (Boolean) cc1.get("xixi");
+		Boolean b = (Boolean) cc1.getValue("xixi");
 		assertEquals(b.booleanValue(), true);
 		cc1.delete("xixi");
-		assertEquals(null, cc1.get("xixi"));
+		assertEquals(null, cc1.getValue("xixi"));
 		assertFalse(cc1.delete(null));
 	}
 
+	@Test
 	public void testDelete2() {
 		cc1.set("xixi", new Long(2008));
-		CacheItem item = cc1.gets("xixi");
+		CacheItem item = cc1.get("xixi");
 		assertEquals(item.getValue(), new Long(2008));
 		assertTrue(item.cacheId != 0);
 		boolean ret = cc1.delete("xixi", item.cacheId + 1);
 		assertFalse(ret);
 		ret = cc1.delete("xixi", item.cacheId);
 		assertTrue(ret);
-		assertEquals(null, cc1.get("xixi"));
+		assertEquals(null, cc1.getValue("xixi"));
 		assertFalse(cc1.delete(null));
 	}
 	
+	@Test
 	public void testSetBoolean() {
 		cc1.set("xixi", Boolean.TRUE);
-		Boolean b = (Boolean) cc1.get("xixi");
+		Boolean b = (Boolean) cc1.getValue("xixi");
 		assertEquals(b.booleanValue(), true);
 		
 		cc1.set("xixi", Boolean.FALSE);
-		b = (Boolean) cc1.get("xixi");
+		b = (Boolean) cc1.getValue("xixi");
 		assertEquals(b.booleanValue(), false);
 	}
 
+	@Test
 	public void testSetIntegers() {
 		int[] value = new int[5];
 		for (int i = 0; i < value.length; i++) {
 			value[i] = i;
 		}
 		cc1.set("xixi", value);
-		int[] value2 = (int[]) cc1.get("xixi");
+		int[] value2 = (int[]) cc1.getValue("xixi");
 		assertEquals(value.length, value2.length);
 		for (int i = 0; i < value.length; i++) {
 			assertEquals(value[i], value2[i]);
 		}
 	}
 	
+	@Test
 	public void testSetInteger() {
 		cc1.set("xixi", new Integer(Integer.MAX_VALUE));
-		Integer i = (Integer) cc1.get("xixi");
+		Integer i = (Integer) cc1.getValue("xixi");
 		assertEquals(i.intValue(), Integer.MAX_VALUE);
 	}
 	
+	@Test
 	public void testSetDate() {
 		Date d1 = new Date();
 		cc1.set("xixi", d1);
-		Date d2 = (Date) cc1.get("xixi");
+		Date d2 = (Date) cc1.getValue("xixi");
 		assertEquals(d1, d2);
 	}
 	
+	@Test
 	public void testSetString() {
 		String value = "test of string encoding";
 		XixiClientManager mgr = XixiClientManager.getInstance("test1");
@@ -263,12 +280,12 @@ public class CacheClientTest extends TestCase {
 		mgr.initialize(serverlist, null,
 				new XixiWeightMap<Integer>(false, XixiWeightMap.CRC32_HASH),
 				enableSSL);
-		XixiClient cc = mgr.createXixiClient();
+		XixiClient cc = mgr.createClient();
 		cc.set("xixi", value);
-		String s = (String) cc.get("xixi");
+		String s = (String) cc.getValue("xixi");
 		assertEquals(s, value);
 		cc.set("xixi1", value);
-		s = (String) cc.get("xixi1");
+		s = (String) cc.getValue("xixi1");
 		assertEquals(s, value);
 		mgr.shutdown();
 		mgr = XixiClientManager.getInstance("test2");
@@ -276,30 +293,32 @@ public class CacheClientTest extends TestCase {
 		mgr.initialize(serverlist, null,
 				new XixiWeightMap<Integer>(false, XixiWeightMap.MD5_HASH),
 				enableSSL);
-		cc = mgr.createXixiClient();
+		cc = mgr.createClient();
 		cc.set("xixi", value);
-		s = (String) cc.get("xixi");
+		s = (String) cc.getValue("xixi");
 		assertEquals(s, value);
 		cc.set("xixi2", value);
-		s = (String) cc.get("xixi2");
+		s = (String) cc.getValue("xixi2");
 		assertEquals(s, value);
 		mgr.shutdown();
 	}
 	
+	@Test
 	public void testCacheItem() {
-		long cacheID = cc1.add("xixi", "ke-ai");
-		assertTrue(cacheID != 0);
-		CacheItem item = cc1.gets("xixi");
-		assertEquals(item.getCacheID(), cacheID);
+		long cacheId = cc1.add("xixi", "ke-ai");
+		assertTrue(cacheId != 0);
+		CacheItem item = cc1.get("xixi");
+		assertEquals(item.getCacheId(), cacheId);
 		long time = item.getExpiration();
 		assertEquals(0, time);
 		assertTrue(item.getFlags() > 0);
-		assertEquals(item.getGroupID(), 0);
+		assertEquals(item.getGroupId(), 0);
 		assertEquals(item.getOption1(), 0);
 		assertEquals(item.getOption2(), 0);
 		assertEquals(item.getValue(), "ke-ai");
 	}
 	
+	@Test
 	public void testGetBase() {
 		cc1.getTransCoder().setOption1((short)0x1234);
 		cc1.getTransCoder().setOption2((byte)0xF1);
@@ -314,6 +333,7 @@ public class CacheClientTest extends TestCase {
 		assertNull(cc1.getBase("xixi"));
 	}
 	
+	@Test
 	public void testGetBaseError() {
 		cc1.set("xixi", "base");
 		CacheBaseItem item = cc1.getBase(null);
@@ -339,6 +359,7 @@ public class CacheClientTest extends TestCase {
 	//	mgr1.enableLocalCache();
 	}
 	
+	@Test
 	public void testKeyExsits() {
 		cc1.set("xixi", "base");
 		assertNotNull(cc1.getBase("xixi"));
@@ -346,6 +367,7 @@ public class CacheClientTest extends TestCase {
 		assertNull(cc1.getBase("xixi"));
 	}
 
+	@Test
 	public void testWeightMap() {
 		String input = "test of string encoding";
 
@@ -354,20 +376,21 @@ public class CacheClientTest extends TestCase {
 		mgr.initialize(serverlist, null,
 				new XixiWeightMap<Integer>(false, XixiWeightMap.CRC32_HASH),
 				enableSSL);
-		XixiClient cc = mgr.createXixiClient();
+		XixiClient cc = mgr.createClient();
 		assertFalse(mgr.getWeightMapper().isConsistent());
 		assertEquals(XixiWeightMap.CRC32_HASH, mgr.getWeightMapper().getHashingAlg());
 		
 		cc.set("xixi", input);
-		String s = (String) cc.get("xixi");
+		String s = (String) cc.getValue("xixi");
 		assertEquals(s, input);
 		cc.set("xixi1", input);
-		s = (String) cc.get("xixi1");
+		s = (String) cc.getValue("xixi1");
 		assertEquals(s, input);
 		cc.flush();
 		mgr.shutdown();
 	}
 	
+	@Test
 	public void testWeightMap2() {
 		String input = "test of string encoding";
 		XixiClientManager mgr = XixiClientManager.getInstance("testWeightMap2");
@@ -378,12 +401,12 @@ public class CacheClientTest extends TestCase {
 		mgr.initialize(serverlist, weights,
 				new XixiWeightMap<Integer>(true, XixiWeightMap.NATIVE_HASH),
 				enableSSL);
-		XixiClient cc = mgr.createXixiClient();
+		XixiClient cc = mgr.createClient();
 		cc.set("xixi", input);
-		String s = (String) cc.get("xixi");
+		String s = (String) cc.getValue("xixi");
 		assertEquals(s, input);
 		cc.set("xixi2", input, 10);
-		s = (String) cc.get("xixi2");
+		s = (String) cc.getValue("xixi2");
 		assertEquals(s, input);
 		mgr.shutdown();
 		
@@ -395,109 +418,122 @@ public class CacheClientTest extends TestCase {
 		mgr.initialize(serverlist, weights,
 				new XixiWeightMap<Integer>(true, XixiWeightMap.MD5_HASH),
 				enableSSL);
-		cc = mgr.createXixiClient();
+		cc = mgr.createClient();
 		cc.set("xixi", input);
-		s = (String) cc.get("xixi");
+		s = (String) cc.getValue("xixi");
 		assertEquals(s, input);
 		cc.set("xixi2", input, 10);
-		s = (String) cc.get("xixi2");
+		s = (String) cc.getValue("xixi2");
 		assertEquals(s, input);
 		cc.flush();
 		mgr.shutdown();
 	}
 
+	@Test
 	public void testSetChar() {
 		cc1.set("xixi", Character.valueOf('Y'));
-		Character c = (Character) cc1.get("xixi");
+		Character c = (Character) cc1.getValue("xixi");
 		assertEquals(c.charValue(), 'Y');
 	}
 
+	@Test
 	public void testSetByte() {
 		cc1.set("xixi", Byte.valueOf((byte) 127));
-		Byte b = (Byte) cc1.get("xixi");
+		Byte b = (Byte) cc1.getValue("xixi");
 		assertEquals(b.byteValue(), (byte) 127);
 	}
 
+	@Test
 	public void testSetStringBuffer() {
 		cc1.set("xixi", new StringBuffer("0315"));
-		StringBuffer o = (StringBuffer) cc1.get("xixi");
+		StringBuffer o = (StringBuffer) cc1.getValue("xixi");
 		assertEquals(o.toString(), "0315");
 	}
 	
+	@Test
 	public void testSetStringBuilder() {
 		cc1.set("xixi", new StringBuilder("0315"));
-		StringBuilder o = (StringBuilder) cc1.get("xixi");
+		StringBuilder o = (StringBuilder) cc1.getValue("xixi");
 		assertEquals(o.toString(), "0315");
 	}
 	
+	@Test
 	public void testGetCacheItem() {
 		cc1.set("xixi", new StringBuilder("0315"));
-		CacheItem item = cc1.gets("xixi");
+		CacheItem item = cc1.get("xixi");
 		assertNotNull(item);
 		assertTrue(item.cacheId != 0);
 		assertEquals(item.value.toString(), "0315");
 	}
 
+	@Test
 	public void testSetShort() {
 		cc1.set("xixi", Short.valueOf((short) 100));
-		Short o = (Short) cc1.get("xixi");
+		Short o = (Short) cc1.getValue("xixi");
 		assertEquals(o.shortValue(), (short) 100);
 	}
 
+	@Test
 	public void testSetLong() {
 		cc1.set("xixi", Long.valueOf(Long.MAX_VALUE));
-		Long o = (Long) cc1.get("xixi");
+		Long o = (Long) cc1.getValue("xixi");
 		assertEquals(o.longValue(), Long.MAX_VALUE);
 	}
 
+	@Test
 	public void testSetDouble() {
 		cc1.set("xixi", new Double(3.15));
-		Double o = (Double) cc1.get("xixi");
-		assertEquals(o.doubleValue(), 3.15);
+		Double o = (Double) cc1.getValue("xixi");
+		assertEquals(o.doubleValue(), 3.15, 0.001);
 	}
 
+	@Test
 	public void testSetFloat() {
 		cc1.set("xixi", new Float(3.15f));
-		Float o = (Float) cc1.get("xixi");
-		assertEquals(o.floatValue(), 3.15f);
+		Float o = (Float) cc1.getValue("xixi");
+		assertEquals(o.floatValue(), 3.15f, 0.001);
 	}
 
+	@Test
 	public void testSetByteArray() {
 		byte[] b = new byte[10];
 		for (int i = 0; i < 10; i++)
 			b[i] = (byte) i;
 
 		cc1.set("xixi", b);
-		assertTrue(Arrays.equals((byte[]) cc1.get("xixi"), b));
+		assertTrue(Arrays.equals((byte[]) cc1.getValue("xixi"), b));
 	}
 
+	@Test
 	public void testSetObj() {
 		SerialItem item = new SerialItem("xixi", 0);
 		cc1.set("xixi", item);
-		SerialItem item2 = (SerialItem) cc1.get("xixi");
+		SerialItem item2 = (SerialItem) cc1.getValue("xixi");
 		assertEquals(item, item2);
 	}
 
+	@Test
 	public void testSetExpire() throws InterruptedException {
 		cc1.set("xixi", "0315", 1);
-		assertEquals("0315", cc1.get("xixi"));
+		assertEquals("0315", cc1.getValue("xixi"));
 
 		Thread.sleep(2000);
 
 		assertNull(cc1.getBase("xixi"));
 	}
 
+	@Test
 	public void testGetTouch() throws InterruptedException {
 		long beginTime = CurrentTick.get();
 		cc1.set("xixi", "session", 100);
-		CacheItem item = cc1.gets("xixi");
+		CacheItem item = cc1.get("xixi");
 		assertNotNull(item);
 		long d = item.getExpireTime() - beginTime;
 		assertEquals(d, 100);
 
 		Thread.sleep(2000);
 
-		item = cc1.gets("xixi");
+		item = cc1.get("xixi");
 		assertNotNull(item);
 		d = item.getExpiration();
 		assertEquals(d, 98);
@@ -507,7 +543,7 @@ public class CacheClientTest extends TestCase {
 		d = item.getExpiration();
 		assertEquals(d, 100);
 		
-		item = cc1.gets("xixi");
+		item = cc1.get("xixi");
 		assertNotNull(item);
 		d = item.getExpiration();
 		assertEquals(d, 100);
@@ -518,18 +554,19 @@ public class CacheClientTest extends TestCase {
 		d = item.getExpiration();
 		assertEquals(0, d);
 		
-		item = cc1.gets("xixi");
+		item = cc1.get("xixi");
 		assertNotNull(item);
 		d = item.getExpiration();
 		assertEquals(0, d);
 		assertNull(cc1.getLastError());
 	}
 
+	@Test
 	public void testDelta() {
 		assertNull(cc1.incr(null));
 		long ret = cc1.add("xixi", "0");
 		assertTrue(ret != 0);
-		assertEquals(cc1.get("xixi"), Long.valueOf(0).toString());
+		assertEquals(cc1.getValue("xixi"), Long.valueOf(0).toString());
 		DeltaItem ditem = cc1.incr("xixi");
 		ditem = cc1.incr("xixi", 5L);
 		ditem = cc1.decr("xixi", 2L);
@@ -541,16 +578,17 @@ public class CacheClientTest extends TestCase {
 		assertEquals(9, ditem.value);
 	}
 
+	@Test
 	public void testDelta2() throws InterruptedException {
-		long ret = cc1.add("xixi", "0", 1);
+		long ret = cc1.add("xixi", "0", 2);
 		assertTrue(ret != 0);
-		assertEquals(cc1.get("xixi"), Long.valueOf(0).toString());
+		assertEquals(cc1.getValue("xixi"), Long.valueOf(0).toString());
 		DeltaItem ditem = cc1.incr("xixi");
 		ditem = cc1.incr("xixi", 5L);
 		ditem = cc1.decr("xixi", 2L);
 		assertEquals(4, ditem.value);
 		
-		Thread.sleep(2000);
+		Thread.sleep(3000);
 		
 		ditem = cc1.incr("xixi", 0L);
 		assertNull(ditem);
@@ -565,30 +603,31 @@ public class CacheClientTest extends TestCase {
 		assertNull(ditem);
 	}
 
+	@Test
 	public void testDelta3() throws InterruptedException {
-		long ret = cc1.add("xixi", "0", 1);
+		long ret = cc1.add("xixi", "0", 10);
 		assertTrue(ret != 0);
-		assertEquals(cc1.get("xixi"), Long.valueOf(0).toString());
+		assertEquals(cc1.getValue("xixi"), Long.valueOf(0).toString());
 		DeltaItem ditem = cc1.incr("xixi");
 		ditem = cc1.incr("xixi", 5L);
 		ditem = cc1.decr("xixi", 2L);
 		assertEquals(ditem.value, 4L);
-		assertTrue(ditem.cacheID != 0);
+		assertTrue(ditem.cacheId != 0);
 		
 		assertNull(cc1.incr("xixi", 8, 123));
-		ditem = cc1.incr("xixi", 8, ditem.cacheID);
+		ditem = cc1.incr("xixi", 8, ditem.cacheId);
 		assertEquals(12, ditem.value);
-		assertTrue(ditem.cacheID != 0);
+		assertTrue(ditem.cacheId != 0);
 
 		assertNull(cc1.decr("xixi", 7, 123));
-		ditem = cc1.decr("xixi", 7, ditem.cacheID);
+		ditem = cc1.decr("xixi", 7, ditem.cacheId);
 		assertEquals(5, ditem.value);
-		assertTrue(ditem.cacheID != 0);
+		assertTrue(ditem.cacheId != 0);
 		
 		ret = cc1.set("xixi", "9", 1, 123);
 		assertEquals(0, ret);
-		CacheItem item = cc1.gets("xixi");
-		ret = cc1.set("xixi", "9", 1, item.getCacheID());
+		CacheItem item = cc1.get("xixi");
+		ret = cc1.set("xixi", "9", 1, item.getCacheId());
 		assertTrue(ret != 0);
 		
 		ditem = cc1.incr("xixi", 0L);
@@ -600,185 +639,201 @@ public class CacheClientTest extends TestCase {
 		assertNull(ditem);
 	}
 	
+	@Test
 	public void testAdd() {
 		cc1.delete("xixi");
-		assertEquals(null, cc1.get("xixi"));
+		assertEquals(null, cc1.getValue("xixi"));
 		cc1.set("xixi", "0315");
-		assertEquals("0315", cc1.get("xixi"));
+		assertEquals("0315", cc1.getValue("xixi"));
 		long ret = cc1.add("xixi", "20080315");
 		assertEquals(0, ret);
-		assertEquals("0315", cc1.get("xixi"));
+		assertEquals("0315", cc1.getValue("xixi"));
 		assertEquals(cc1.add(null, "ke,ai"), 0);
 		assertEquals(cc1.add("xixi", null), 0);
 	}
 
+	@Test
 	public void testAddExpire() throws InterruptedException {
 		cc1.add("xixi", "0315", 1);
-		assertEquals("0315", cc1.get("xixi"));
+		assertEquals("0315", cc1.getValue("xixi"));
 
 		Thread.sleep(2000);
 
-		assertNull(cc1.get("xixi"));
+		assertNull(cc1.getValue("xixi"));
 	}
 
+	@Test
 	public void testAddExpire2() throws InterruptedException {
-		cc1.add("xixi", "0315", 3);
-		assertEquals("0315", cc1.get("xixi"));
+		cc1.add("xixi", "0315", 5);
+		assertEquals("0315", cc1.getValue("xixi"));
 
 		Thread.sleep(2000);
 
-		assertEquals("0315", cc1.get("xixi"));
+		assertEquals("0315", cc1.getValue("xixi"));
 	}
 
+	@Test
 	public void testReplaceStringObject() {
 		cc1.set("xixi", "0315");
 		cc1.replace("xixi", "20080315");
-		assertEquals("20080315", cc1.get("xixi"));
+		assertEquals("20080315", cc1.getValue("xixi"));
 	}
 
+	@Test
 	public void testReplaceExpire() throws InterruptedException {
 		cc1.set("xixi", "0315");
 		cc1.replace("xixi", "20080315", 1);
-		assertEquals("20080315", cc1.get("xixi"));
+		assertEquals("20080315", cc1.getValue("xixi"));
 
 		Thread.sleep(2000);
 
 		assertFalse(cc1.exists("xixi"));
 	}
 
+	@Test
 	public void testReplaceExpire2() throws InterruptedException {
 		cc1.set("xixi", "0315");
-		cc1.replace("xixi", "20080315", 3);
-		assertEquals("20080315", cc1.get("xixi"));
+		cc1.replace("xixi", "20080315", 4);
+		assertEquals("20080315", cc1.getValue("xixi"));
 
 		Thread.sleep(2000);
 
-		assertEquals("20080315", cc1.get("xixi"));
+		assertEquals("20080315", cc1.getValue("xixi"));
 	}
 
+	@Test
 	public void testReplace3() {
 		cc1.set("xixi", "0315", 0);
 		cc1.replace("xixi", "20080315", 0);
-		assertEquals("20080315", cc1.get("xixi"));
+		assertEquals("20080315", cc1.getValue("xixi"));
 	}
 	
+	@Test
 	public void testReplace4() {
 		cc1.set("xixi", "0315", 0);
 		long ret = cc1.replace("xixi", "20080315", 3, 123);
 		assertEquals(0, ret);
-		assertEquals("0315", cc1.get("xixi"));
-		CacheItem item = cc1.gets("xixi");
-		ret = cc1.replace("xixi", "20080315", 3, item.getCacheID());
+		assertEquals("0315", cc1.getValue("xixi"));
+		CacheItem item = cc1.get("xixi");
+		ret = cc1.replace("xixi", "20080315", 3, item.getCacheId());
 		assertTrue(ret != 0);
-		assertEquals("20080315", cc1.get("xixi"));
+		assertEquals("20080315", cc1.getValue("xixi"));
 	}
 
+	@Test
 	public void testAppend() {
 		cc1.append("xixi", "03");
 		assertEquals(0, cc1.append(null, "15"));
 		assertEquals(0, cc1.append("xixi", null));
-		assertEquals(cc1.get("xixi"), null);
+		assertEquals(cc1.getValue("xixi"), null);
 		cc1.add("xixi", "03");
-		assertEquals(cc1.get("xixi"), "03");
+		assertEquals(cc1.getValue("xixi"), "03");
 		assertNotSame(cc1.append("xixi", "15"), 0);
-		assertEquals(cc1.get("xixi"), "0315");
+		assertEquals(cc1.getValue("xixi"), "0315");
 	}
 
+	@Test
 	public void testAppend2() {
 		long ret = cc1.add("xixi", "03");
 		assertTrue(ret != 0);
 		ret = cc1.append("xixi", "15", 99999);
 		assertEquals(0, ret);
-		CacheItem item = cc1.gets("xixi");
-		ret = cc1.append("xixi", "15", item.getCacheID());
+		CacheItem item = cc1.get("xixi");
+		ret = cc1.append("xixi", "15", item.getCacheId());
 		assertTrue(ret != 0);
-		assertEquals("0315", cc1.get("xixi"));
+		assertEquals("0315", cc1.getValue("xixi"));
 	}
 
+	@Test
 	public void testPrepend() {
 		long ret = cc1.prepend("xixi", "03");
 		assertEquals(0, ret);
 		assertEquals(0, cc1.prepend(null, "15"));
 		assertEquals(0, cc1.prepend("xixi", null));
-		assertEquals(cc1.get("xixi"), null);
+		assertEquals(cc1.getValue("xixi"), null);
 		ret = cc1.add("xixi", "03");
 		assertTrue(ret != 0);
-		assertEquals(cc1.get("xixi"), "03");
+		assertEquals(cc1.getValue("xixi"), "03");
 		assertNotSame(cc1.prepend("xixi", "15"), 0);
-		assertEquals(cc1.get("xixi"), "1503");
+		assertEquals(cc1.getValue("xixi"), "1503");
 	}
 
+	@Test
 	public void testPrepend2() {
 		cc1.add("xixi", "03");
 		long ret = cc1.prepend("xixi", "15", 123);
 		assertEquals(0, ret);
-		CacheItem item = cc1.gets("xixi");
-		ret = cc1.prepend("xixi", "15", item.getCacheID());
+		CacheItem item = cc1.get("xixi");
+		ret = cc1.prepend("xixi", "15", item.getCacheId());
 		assertTrue(ret != 0);
-		assertEquals("1503", cc1.get("xixi"));
+		assertEquals("1503", cc1.getValue("xixi"));
 	}
 
-	public void testCacheIDExpire() {
+	@Test
+	public void testCacheIdExpire() {
 		cc1.set("xixi", "0315");
-		CacheItem item = cc1.gets("xixi");
+		CacheItem item = cc1.get("xixi");
 		assertEquals("0315", item.getValue());
 		
-		cc1.set("xixi", "20080315", 0, item.getCacheID());
-		item = cc1.gets("xixi");
+		cc1.set("xixi", "20080315", 0, item.getCacheId());
+		item = cc1.get("xixi");
 		assertEquals("20080315", item.getValue());
 		cc1.set("xixi", "0315");
-		assertEquals("0315", cc1.get("xixi"));
-		cc1.set("xixi", "ke,ai", 0, item.getCacheID());
-		assertEquals("0315", cc1.get("xixi"));
+		assertEquals("0315", cc1.getValue("xixi"));
+		cc1.set("xixi", "ke,ai", 0, item.getCacheId());
+		assertEquals("0315", cc1.getValue("xixi"));
 	}
 
-	public void testCacheIDExpire2() throws InterruptedException {
+	@Test
+	public void testCacheIdExpire2() throws InterruptedException {
 		cc1.set("xixi", "0315");
-		CacheItem item = cc1.gets("xixi");
+		CacheItem item = cc1.get("xixi");
 		assertEquals("0315", item.getValue());
 
-		cc1.set("xixi", "20080315", 1, item.getCacheID());
-		assertEquals("20080315", cc1.get("xixi"));
+		cc1.set("xixi", "20080315", 1, item.getCacheId());
+		assertEquals("20080315", cc1.getValue("xixi"));
 
 		Thread.sleep(2000);
 		
-		assertNull(cc1.get("xixi"));
+		assertNull(cc1.getValue("xixi"));
 
 		cc1.set("xixi", "ke,ai");
-		assertEquals("ke,ai", cc1.get("xixi"));
+		assertEquals("ke,ai", cc1.getValue("xixi"));
 
-		long ret = cc1.set("xixi", "?", 1, item.getCacheID());
+		long ret = cc1.set("xixi", "?", 1, item.getCacheId());
 		assertTrue(ret == 0);
 	}
 
+	@Test
 	public void testBigData() {
 		int ct = cc1.getTransCoder().getCompressionThreshold();
 		cc1.getTransCoder().setCompressionThreshold(0x7FFFFFFF);
 		SerialItem item = new SerialItem("testBigData", 10240);
 		for (int i = 0; i < 10; ++i) {
 			cc1.set("xixi" + i, item);
-			SerialItem item2 = (SerialItem)cc1.get("xixi" + i);
+			SerialItem item2 = (SerialItem)cc1.getValue("xixi" + i);
 			assertEquals(item, item2);
 		}
 		item = new SerialItem("testBigData", 1024 * 1024 * 2);
 		long ret = cc1.set("xixi", item);
 		assertTrue(ret != 0);
-		SerialItem item2 = (SerialItem)cc1.get("xixi");
+		SerialItem item2 = (SerialItem)cc1.getValue("xixi");
 		assertEquals(item, item2);
 		cc1.getTransCoder().setCompressionThreshold(ct);
 	}
 	
+	@Test
 	public void testBigData2() {
 		SerialItem item = new SerialItem("testBigData", 10240);
 		for (int i = 0; i < 10; ++i) {
 			cc1.set("xixi" + i, item);
-			SerialItem item2 = (SerialItem)cc1.get("xixi" + i);
+			SerialItem item2 = (SerialItem)cc1.getValue("xixi" + i);
 			assertEquals(item, item2);
 		}
 		item = new SerialItem("testBigData2", 1024 * 1024 * 2);
 		long ret = cc1.set("xixi", item);
 		assertTrue(ret != 0);
-		SerialItem item2 = (SerialItem)cc1.get("xixi");
+		SerialItem item2 = (SerialItem)cc1.getValue("xixi");
 		assertEquals(item, item2);
 	}
 	/*
@@ -958,8 +1013,8 @@ public class CacheClientTest extends TestCase {
 		cc.getTransCoder().setEncodingCharsetName(cn);
 		
 		CacheBaseItem item = cc.getBase("xixi");
-		long cacheID = item.getCacheID();
-		assertTrue(cacheID != 0);
+		long cacheId = item.getCacheId();
+		assertTrue(cacheId != 0);
 		assertEquals(0, item.getOption1());
 		assertEquals(0, item.getOption2());
 		int flags = item.getFlags();
@@ -968,13 +1023,13 @@ public class CacheClientTest extends TestCase {
 		boolean ret = cc.updateFlags("xixi", flags, 0);
 		assertTrue(ret);
 		item = cc.getBase("xixi");
-		assertTrue(item.getCacheID() != 0);
-		assertTrue(item.getCacheID() != cacheID);
+		assertTrue(item.getCacheId() != 0);
+		assertTrue(item.getCacheId() != cacheId);
 		assertEquals(3, item.getOption1());
 		assertEquals(15, item.getOption2());
 		
-		cacheID = cc.set("xixi", "", 0, 0);
-		assertTrue(cacheID != 0);
+		cacheId = cc.set("xixi", "", 0, 0);
+		assertTrue(cacheId != 0);
 		assertEquals("", cc.get("xixi"));
 		
 		item = cc.getBase("xixi");
@@ -986,7 +1041,7 @@ public class CacheClientTest extends TestCase {
 		assertNotNull(item);
 		assertEquals(flags, item.getFlags());
 
-		ret = cc.updateFlags("xixi", 0, item.getCacheID());
+		ret = cc.updateFlags("xixi", 0, item.getCacheId());
 		assertTrue(ret);
 		item = cc.getBase("xixi");
 		assertNotNull(item);
@@ -999,7 +1054,7 @@ public class CacheClientTest extends TestCase {
 				continue;
 			}
 			item = cc.getBase("xixi");
-			ret = cc.updateFlags("xixi", i, item.getCacheID());
+			ret = cc.updateFlags("xixi", i, item.getCacheId());
 			assertTrue(ret);
 			assertNull(cc.get("xixi"));
 		}
@@ -1025,8 +1080,8 @@ public class CacheClientTest extends TestCase {
 		cc.getTransCoder().setEncodingCharsetName(cn);
 		
 		CacheBaseItem item = cc.getBase("xixi");
-		long cacheID = item.getCacheID();
-		assertTrue(cacheID != 0);
+		long cacheId = item.getCacheId();
+		assertTrue(cacheId != 0);
 		assertEquals(0, item.getOption1());
 		assertEquals(0, item.getOption2());
 		int flags = item.getFlags();
@@ -1037,20 +1092,20 @@ public class CacheClientTest extends TestCase {
 		ret = cc.updateFlags("xixi2", flags, 0);
 		assertFalse(ret);
 		item = cc.getBase("xixi");
-		assertTrue(item.getCacheID() != 0);
-		assertTrue(item.getCacheID() != cacheID);
+		assertTrue(item.getCacheId() != 0);
+		assertTrue(item.getCacheId() != cacheId);
 		assertEquals(3, item.getOption1());
 		assertEquals(15, item.getOption2());
 		
-		cacheID = cc.set("xixi", "", 0, 0);
-		assertTrue(cacheID != 0);
+		cacheId = cc.set("xixi", "", 0, 0);
+		assertTrue(cacheId != 0);
 		assertEquals("", cc.get("xixi"));
 		
 		item = cc.getBase("xixi");
 		assertNotNull(item);
 		flags = item.getFlags();
 		
-		ret = cc.updateFlags(null, 0, item.getCacheID());
+		ret = cc.updateFlags(null, 0, item.getCacheId());
 		assertFalse(ret);
 		
 		mgr.shutdown();
@@ -1072,16 +1127,16 @@ public class CacheClientTest extends TestCase {
 		cc.getTransCoder().setEncodingCharsetName(cn);
 		
 		CacheBaseItem item = cc.getBase("xixi");
-		long cacheID = item.getCacheID();
-		assertTrue(cacheID != 0);
+		long cacheId = item.getCacheId();
+		assertTrue(cacheId != 0);
 		assertEquals(20, item.getExpiration());
 		long expiration = item.getExpiration();
 
 		boolean ret = cc.updateExpiration("xixi", 2, 0);
 		assertTrue(ret);
 		item = cc.getBase("xixi");
-		assertTrue(item.getCacheID() != 0);
-		assertTrue(item.getCacheID() == cacheID);
+		assertTrue(item.getCacheId() != 0);
+		assertTrue(item.getCacheId() == cacheId);
 		assertEquals(2, item.getExpiration());
 		
 		item = cc.getBase("xixi");
@@ -1093,7 +1148,7 @@ public class CacheClientTest extends TestCase {
 		assertNotNull(item);
 		assertEquals(expiration, item.getExpiration());
 
-		ret = cc.updateExpiration("xixi", 5, item.getCacheID());
+		ret = cc.updateExpiration("xixi", 5, item.getCacheId());
 		assertTrue(ret);
 		item = cc.getBase("xixi");
 		assertNotNull(item);
@@ -1122,16 +1177,16 @@ public class CacheClientTest extends TestCase {
 		cc.getTransCoder().setEncodingCharsetName(cn);
 
 		CacheBaseItem item = cc.getBase("xixi");
-		long cacheID = item.getCacheID();
-		assertTrue(cacheID != 0);
+		long cacheId = item.getCacheId();
+		assertTrue(cacheId != 0);
 		assertEquals(20, item.getExpiration());
 		long expiration = item.getExpiration();
 
 		ret = cc.updateExpiration("xixi", 2, 0);
 		assertTrue(ret);
 		item = cc.getBase("xixi");
-		assertTrue(item.getCacheID() != 0);
-		assertTrue(item.getCacheID() == cacheID);
+		assertTrue(item.getCacheId() != 0);
+		assertTrue(item.getCacheId() == cacheId);
 		assertEquals(2, item.getExpiration());
 		
 		item = cc.getBase("xixi");
@@ -1143,14 +1198,14 @@ public class CacheClientTest extends TestCase {
 		assertNotNull(item);
 		assertEquals(expiration, item.getExpiration());
 
-		ret = cc.updateExpiration("xixi", 5, item.getCacheID());
+		ret = cc.updateExpiration("xixi", 5, item.getCacheId());
 		assertTrue(ret);
 		item = cc.getBase("xixi");
 		assertNotNull(item);
 		assertEquals(5, item.getExpiration());
 		assertNotNull(cc.get("xixi"));
 		
-		ret = cc.updateExpiration(null, 5, item.getCacheID());
+		ret = cc.updateExpiration(null, 5, item.getCacheId());
 		assertFalse(ret);
 		
 		mgr.shutdown();
@@ -1180,16 +1235,16 @@ public class CacheClientTest extends TestCase {
 		cc.getTransCoder().setEncodingCharsetName(cn);
 
 		CacheBaseItem item = cc.getBase("xixi");
-		long cacheID = item.getCacheID();
-		assertTrue(cacheID != 0);
+		long cacheId = item.getCacheId();
+		assertTrue(cacheId != 0);
 		assertEquals(20, item.getExpiration());
 		long expiration = item.getExpiration();
 
 		ret = cc.updateExpiration("xixi", 2, 0);
 		assertTrue(ret);
 		item = cc.getBase("xixi");
-		assertTrue(item.getCacheID() != 0);
-		assertTrue(item.getCacheID() == cacheID);
+		assertTrue(item.getCacheId() != 0);
+		assertTrue(item.getCacheId() == cacheId);
 		assertEquals(2, item.getExpiration());
 		
 		item = cc.getBase("xixi");
@@ -1202,21 +1257,21 @@ public class CacheClientTest extends TestCase {
 		assertEquals(expiration, item.getExpiration());
 
 		assertEquals(expiration, item.getExpiration());
-		ret = cc.updateExpiration("xixi", 5, item.getCacheID());
+		ret = cc.updateExpiration("xixi", 5, item.getCacheId());
 		assertTrue(ret);
 		item = cc.getBase("xixi");
 		assertNotNull(item);
 		assertEquals(5, item.getExpiration());
 		assertNotNull(cc.get("xixi"));
 		
-		ret = cc.updateExpiration(null, 5, item.getCacheID());
+		ret = cc.updateExpiration(null, 5, item.getCacheId());
 		assertFalse(ret);
 		
 		CacheClientImpl cc2 = new CacheClientImpl(mgr, 315);
 		
-		int watchID = cc2.createWatch(mgr.getServers()[0], 100);
-		assertTrue(watchID != 0);
-		assertNotNull(cc2.checkWatch(mgr.getServers()[0], watchID, 1, 100, 0));
+		int watchId = cc2.createWatch(mgr.getServers()[0], 100);
+		assertTrue(watchId != 0);
+		assertNotNull(cc2.checkWatch(mgr.getServers()[0], watchId, 1, 100, 0));
 		assertNull(cc2.checkWatch(mgr.getServers()[0], 99999, 1, 100, 0));
 		
 		mgr.shutdown();
@@ -1234,7 +1289,7 @@ public class CacheClientTest extends TestCase {
 	}*/
 	
 	public static final class SerialItem implements Serializable {
-		private static final long serialVersionUID = -1331512331067654578L;
+		private static final long serialVersionUId = -1331512331067654578L;
 		
 		private String name;
 		private byte[] buffer;

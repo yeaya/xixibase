@@ -44,7 +44,7 @@ public class CacheBaseItem {
 		return key;
 	}
 
-	public long getCacheID() {
+	public long getCacheId() {
 		return cacheId;
 	}
 
@@ -71,7 +71,7 @@ public class CacheBaseItem {
 		return expireTime;
 	}
 
-	public int getGroupID() {
+	public int getGroupId() {
 		return groupId;
 	}
 

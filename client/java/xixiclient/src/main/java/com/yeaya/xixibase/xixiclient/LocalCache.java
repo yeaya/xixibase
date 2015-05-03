@@ -74,10 +74,10 @@ public class LocalCache {
 		return cacheCount.get();
 	}
 
-	public int getWatchID(String host) {
+	public int getWatchId(String host) {
 		LocalCacheWatch updater = watchMap.get(host);
 		if (updater != null) {
-			return updater.getWatchID();
+			return updater.getWatchId();
 		}
 		return 0;
 	}

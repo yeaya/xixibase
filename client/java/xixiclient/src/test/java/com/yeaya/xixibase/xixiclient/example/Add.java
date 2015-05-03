@@ -32,13 +32,13 @@ public class Add  {
 		XixiClientManager manager = XixiClientManager.getInstance("example");
 		manager.initialize(serverlist, true);
 		
-		XixiClient cc = manager.createXixiClient();
+		XixiClient cc = manager.createClient();
 		
 		cc.add("key", "value1");
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 		
 		cc.add("key", "value2");
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 
 		cc.flush();
 		

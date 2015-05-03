@@ -18,7 +18,7 @@ package com.yeaya.xixibase.xixiclient.multi;
 
 public class MultiUpdateExpirationItem {
 	public String key;
-	public long cacheID;
+	public long cacheId;
 	public int expiration;
 	
 	protected short reason = 0;

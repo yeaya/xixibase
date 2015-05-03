@@ -163,8 +163,8 @@ class TestCaseLocalCache1 implements RunableLocalCache {
 		this.operationType = operationType;
 		
 		XixiClientManager mgr = XixiClientManager.getInstance(mgrName);
-		cc = mgr.createXixiClient();
-		xc = mgr.createXixiClient4LocalCache();
+		cc = mgr.createClient();
+		xc = mgr.createClientWithLocalCache();
 	}
 	public void run() {
 		if ((operationType & OP_FLAG_GET_LOCAL) == OP_FLAG_GET_LOCAL) {
@@ -192,11 +192,11 @@ class TestCaseLocalCache1 implements RunableLocalCache {
 
 		for (int i = 0; i < bachCount && readpos < updateFinishedPos; i++, readpos++) {
 			String mykey = key + readpos;
-			String value = (String)xc.get(mykey);
+			String value = (String)xc.getValue(mykey);
 			if (value == null) {
 				notFoundCount++;
 				System.out.println("getCacheLocal id=" + id + " get error, key=" + mykey);
-				if (cc.get(mykey) == null) {
+				if (cc.getValue(mykey) == null) {
 					System.out.println("getCacheLocal again id=" + id + " get error, key=" + mykey);
 				} else {
 					System.out.println("getCacheLocal again id=" + id + " get ok, key=" + mykey);
@@ -217,10 +217,10 @@ class TestCaseLocalCache1 implements RunableLocalCache {
 		}
 		for (int i = 0; i < bachCount && readpos < updateFinishedPos; i++, readpos++) {
 			String mykey = key + readpos;
-			if (cc.get(mykey) == null) {
+			if (cc.getValue(mykey) == null) {
 				this.notFoundCount++;
 				System.out.println("getCache id=" + id + " get error, key=" + mykey);
-				if (cc.get(mykey) == null) {
+				if (cc.getValue(mykey) == null) {
 					System.out.println("getCache again id=" + id + " get error, key=" + mykey);
 				} else {
 					System.out.println("getCache again id=" + id + " get ok, key=" + mykey);
@@ -237,11 +237,11 @@ class TestCaseLocalCache1 implements RunableLocalCache {
 
 		for (int i = 0; i < bachCount && readpos < updateFinishedPos; i++, readpos++) {
 			String mykey = key + readpos;
-			String value = (String)xc.get(mykey);
+			String value = (String)xc.getValue(mykey);
 			if (value == null) {
 				notFoundCount++;
 				System.out.println("getCacheLocal id=" + id + " get error, key=" + mykey);
-				if (cc.get(mykey) == null) {
+				if (cc.getValue(mykey) == null) {
 					System.out.println("getCacheLocal again id=" + id + " get error, key=" + mykey);
 				} else {
 					System.out.println("getCacheLocal again id=" + id + " get ok, key=" + mykey);
@@ -359,7 +359,7 @@ public class StressTestLocalCache {
 		LocalCache localCache = mgr.getLocalCache();
 		localCache.setMaxCacheSize(512 * 1024 * 1024);
 		
-		XixiClient cc = mgr.createXixiClient();
+		XixiClient cc = mgr.createClient();
 		//xc = mgr.createXixiClient4LocalCache();
 
 		cc.flush();

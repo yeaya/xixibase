@@ -16,16 +16,20 @@
 
 package com.yeaya.xixibase.xixiclient;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.yeaya.xixibase.xixiclient.network.SocketManager;
 import com.yeaya.xixibase.xixiclient.network.XixiSocket;
 
-import junit.framework.TestCase;
-
-public class CacheClientManagerTest extends TestCase {
+public class CacheClientManagerTest {
 	static String[] serverlist;
 	static String servers;
 	static boolean enableSSL = false;
@@ -47,25 +51,26 @@ public class CacheClientManagerTest extends TestCase {
 		serverlist = servers.split(",");
 	}
 
-	protected void setUp() throws Exception {
-		super.setUp();
+	@Before
+	public void setUp() throws Exception {
 	//	CacheClientManager mgr1 = CacheClientManager.getInstance(managerName1);
 	//	cc1 = mgr1.createClient();
 	}
 
-	protected void tearDown() throws Exception {
-		super.tearDown();
+	@After
+	public void tearDown() throws Exception {
 	//	assertNotNull(cc1);
 	//	cc1.flush();
 	}
 
+	@Test
 	public void testInitialize() {
 		XixiClientManager mgr = XixiClientManager.getInstance();
 		assertNotNull(mgr);
 		assertEquals(mgr.getName(), "default");
 		assertEquals(mgr.getDefaultPort(), 7788);
 		assertEquals(mgr.getDefaultGroupId(), 0);
-		mgr.setDefaultGroupID(315);
+		mgr.setDefaultGroupId(315);
 		mgr.setInitConn(2);
 		assertEquals(mgr.getInitConn(), 2);
 		mgr.setMaxActiveConn(7);
@@ -94,6 +99,7 @@ public class CacheClientManagerTest extends TestCase {
 		assertNotNull(mgr.getServers());
 	}
 	
+	@Test
 	public void testCreateSocket() {
 		SocketManager mgr = new SocketManager();
 		int size = mgr.getSocketWriteBufferSize();
@@ -108,6 +114,7 @@ public class CacheClientManagerTest extends TestCase {
 		mgr.shutdown();
 	}
 	
+	@Test
 	public void testGetHost() {
 		XixiClientManager mgr = XixiClientManager.getInstance();
 		mgr.initialize(serverlist, enableSSL);
@@ -116,6 +123,7 @@ public class CacheClientManagerTest extends TestCase {
 		mgr.shutdown();
 	}
 	
+	@Test
 	public void testGetSocketByHost() {
 		SocketManager mgr = new SocketManager();
 		mgr.initialize(serverlist, enableSSL);
@@ -124,6 +132,7 @@ public class CacheClientManagerTest extends TestCase {
 		mgr.shutdown();
 	}
 	
+	@Test
 	public void testMaintain() throws InterruptedException {
 		XixiClientManager mgr = XixiClientManager.getInstance("testMaintain");
 		int mi = mgr.getMaintainInterval();
@@ -141,8 +150,11 @@ public class CacheClientManagerTest extends TestCase {
 		assertEquals(2 * serverCount, activeCount);
 		assertEquals(3 * serverCount, inactiveCount);
 
-		XixiClient cc = mgr.createXixiClient(315);
+		XixiClient cc = mgr.createClient(315);
 		cc.set("xixi", "0315");
+		 activeCount = mgr.socketManager.getActiveSocketCount();
+		 inactiveCount = mgr.socketManager.getInactiveSocketCount();
+		
 		Thread.sleep(2000);
 		
 		activeCount = mgr.socketManager.getActiveSocketCount();
@@ -155,6 +167,7 @@ public class CacheClientManagerTest extends TestCase {
 		mgr.shutdown();
 	}
 	
+	@Test
 	public void testError() {
 		SocketManager mgr = new SocketManager();
 		boolean ret = mgr.initialize(null, enableSSL);

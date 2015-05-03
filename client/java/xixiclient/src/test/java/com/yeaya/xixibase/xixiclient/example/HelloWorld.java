@@ -32,10 +32,10 @@ public class HelloWorld  {
 		XixiClientManager manager = XixiClientManager.getInstance("example");
 		manager.initialize(serverlist, false);
 		
-		XixiClient cc = manager.createXixiClient();
+		XixiClient cc = manager.createClient();
 		
 		cc.set("xixi", "Hello World!");
-		String value = (String)cc.get("xixi");
+		String value = (String)cc.getValue("xixi");
 		System.out.println(value);
 		
 		cc.flush();

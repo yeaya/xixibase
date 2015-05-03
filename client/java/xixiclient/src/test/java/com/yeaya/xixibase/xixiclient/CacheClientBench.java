@@ -50,8 +50,8 @@ public class CacheClientBench  {
 	//	manager.enableLocalCache();
 		manager.getLocalCache().setMaxCacheSize(128 * 1024 * 1024);
 		
-		cc = manager.createXixiClient(groupId);
-		cc4lc = manager.createXixiClient4LocalCahce(groupId);
+		cc = manager.createClient(groupId);
+		cc4lc = manager.createClientWithLocalCahce(groupId);
 		
 		System.out.println("keybaselen=" + keyBase.length() + " objlen=" + object.length());
 	}
@@ -99,7 +99,7 @@ public class CacheClientBench  {
 		long begin = System.currentTimeMillis();
 		String obj = "";
 		for (int i = start; i < start + runs; i++) {
-			obj = (String)cc4lc.get(keyBase + i);
+			obj = (String)cc4lc.getValue(keyBase + i);
 			if (!object.equals(obj)) {
 				r = false;
 				System.out.println("getW error index=" + i + " obj=" + obj);
@@ -116,7 +116,7 @@ public class CacheClientBench  {
 		long begin = System.currentTimeMillis();
 		Object obj = "";
 		for (int i = start; i < start + runs; i++) {
-			obj = (String)cc4lc.get(keyBase + i);
+			obj = (String)cc4lc.getValue(keyBase + i);
 			if (!object.equals(obj)) {
 				r = false;
 				System.out.println("getL error index=" + i + " obj=" + obj);

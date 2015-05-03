@@ -32,24 +32,24 @@ public class Delete  {
 		XixiClientManager manager = XixiClientManager.getInstance("example");
 		manager.initialize(serverlist, true);
 		
-		XixiClient cc = manager.createXixiClient();
+		XixiClient cc = manager.createClient();
 		
 		cc.set("key", "value");
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 		
 		cc.delete("key");
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 		
 		long cacheID1 = cc.set("key", "value1");
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 		long cacheID2 = cc.set("key", "value2");
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 
 		cc.delete("key", cacheID1);
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 
 		cc.delete("key", cacheID2);
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 
 		cc.flush();
 		

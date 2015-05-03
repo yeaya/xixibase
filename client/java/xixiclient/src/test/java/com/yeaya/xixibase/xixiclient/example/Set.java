@@ -32,19 +32,19 @@ public class Set  {
 		XixiClientManager manager = XixiClientManager.getInstance("example");
 		manager.initialize(serverlist, false);
 		
-		XixiClient cc = manager.createXixiClient();
+		XixiClient cc = manager.createClient();
 		
 		long cacheID1 = cc.set("key", "value1");
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 		
 		long cacheID2 = cc.set("key", "value2");
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 
 		cc.set("key", "value3", 0, cacheID1);
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 		
 		cc.set("key", "value4", 0, cacheID2);
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 
 		cc.flush();
 		

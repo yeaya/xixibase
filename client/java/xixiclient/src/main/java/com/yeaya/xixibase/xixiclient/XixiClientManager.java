@@ -1,5 +1,5 @@
 /*
-   Copyright [2011] [Yao Yuan(yeaya@163.com)]
+   Copyright [2011-2015] [Yao Yuan(yeaya@163.com)]
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,21 +16,11 @@
 
 package com.yeaya.xixibase.xixiclient;
 
-import java.io.IOException;
-import java.nio.channels.Selector;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.yeaya.xixibase.xixiclient.network.SSLSocket;
 import com.yeaya.xixibase.xixiclient.network.SocketManager;
-import com.yeaya.xixibase.xixiclient.network.TCPSocket;
-import com.yeaya.xixibase.xixiclient.network.XixiSocket;
 import com.yeaya.xixibase.xixiclient.util.WeightMap;
 
 /**
@@ -108,8 +98,8 @@ public class XixiClientManager {
 	 * Set default groupId.
 	 * @param defaultGroupID
 	 */
-	public void setDefaultGroupID(int defaultGroupID) {
-		this.defaultGroupId = defaultGroupID;
+	public void setDefaultGroupId(int defaultGroupId) {
+		this.defaultGroupId = defaultGroupId;
 	}
 
 	/**
@@ -443,7 +433,7 @@ public class XixiClientManager {
 	 * 
      * @return created client
 	 */
-	public XixiClient createXixiClient() {
+	public XixiClient createClient() {
 		return new XixiClientImpl(this, socketManager, defaultGroupId, false);
 	}
 	
@@ -453,7 +443,7 @@ public class XixiClientManager {
 	 * @param groupId specified groupId
      * @return created client
 	 */
-	public XixiClient createXixiClient(int groupId) {
+	public XixiClient createClient(int groupId) {
 		return new XixiClientImpl(this, socketManager, groupId, false);
 	}
 
@@ -462,7 +452,7 @@ public class XixiClientManager {
 	 * 
      * @return created client
 	 */
-	public XixiClient createXixiClient4LocalCache() {
+	public XixiClient createClientWithLocalCache() {
 		return new XixiClientImpl(this, socketManager, defaultGroupId, true);
 	}
 	
@@ -472,7 +462,7 @@ public class XixiClientManager {
 	 * @param groupId specified groupId
      * @return created client
 	 */
-	public XixiClient createXixiClient4LocalCahce(int groupId) {
+	public XixiClient createClientWithLocalCahce(int groupId) {
 		return new XixiClientImpl(this, socketManager, groupId, true);
 	}
 }

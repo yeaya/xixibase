@@ -35,24 +35,24 @@ public class LocalCache  {
 		// enable local cache
 	//	manager.enableLocalCache();
 		
-		XixiClient cc = manager.createXixiClient4LocalCache();
+		XixiClient cc = manager.createClientWithLocalCache();
 
 		cc.set("key", "value1");
 		
 		// get the object from remote Xixibase server
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 		
 		// get the object from remote Xixibase server
 		// and watch the change of the object
 		// and save this object into local cache 
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 
 		// try to get the object from local cache
 		// if the object is not exist in local cache
 		//     get the object from remote Xixibase server
 		//     and watch the change of the object
 		//     and save this object into local cache 
-		System.out.println(cc.get("key")); 
+		System.out.println(cc.getValue("key")); 
 
 		cc.flush();
 		
@@ -61,7 +61,7 @@ public class LocalCache  {
 		// and save this object into local cache
 		cc.set("key", "value2");
 		
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 		
 		cc.flush();
 

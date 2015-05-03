@@ -237,17 +237,17 @@ public interface XixiClient {
 
 	public DeltaItem incr(String key, long delta);
 
-	public DeltaItem incr(String key, long delta, long cacheID);
+	public DeltaItem incr(String key, long delta, long cacheId);
 
 	public DeltaItem decr(String key);
 
 	public DeltaItem decr(String key, long delta);
 
-	public DeltaItem decr(String key, long delta, long cacheID);
+	public DeltaItem decr(String key, long delta, long cacheId);
 
 //	public DeltaItem delta(String key, long delta, long cacheId);
 
-	public Object get(String key);
+	public Object getValue(String key);
 
 	public CacheBaseItem getBase(String key);
 	
@@ -256,7 +256,7 @@ public interface XixiClient {
 	public boolean updateExpiration(String key, int expiration);
 	public boolean updateExpiration(String key, int expiration, long cacheId);
 
-	public CacheItem gets(String key);
+	public CacheItem get(String key);
 	
 	public CacheItem getAndTouch(String key, int expiration);
 

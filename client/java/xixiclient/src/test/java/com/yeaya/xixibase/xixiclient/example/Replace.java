@@ -32,22 +32,22 @@ public class Replace  {
 		XixiClientManager manager = XixiClientManager.getInstance("example");
 		manager.initialize(serverlist, false);
 		
-		XixiClient cc = manager.createXixiClient();
+		XixiClient cc = manager.createClient();
 		
 		cc.replace("key", "value1");
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 		
 		long cacheID1 = cc.add("key", "value2");
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 		
 		long cacheID2 = cc.replace("key", "value3");
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 
 		cc.replace("key", "value4", 0, cacheID1);
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 		
 		cc.replace("key", "value5", 0, cacheID2);
-		System.out.println(cc.get("key"));
+		System.out.println(cc.getValue("key"));
 
 		cc.flush();
 		

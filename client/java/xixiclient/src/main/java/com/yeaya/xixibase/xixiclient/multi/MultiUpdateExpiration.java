@@ -234,7 +234,7 @@ public final class MultiUpdateExpiration extends Defines {
 			outBuffer.put(XIXI_CATEGORY_CACHE);
 			outBuffer.put(XIXI_TYPE_UPDATE_EXPIRATION_REQ);
 			outBuffer.put(opFlag);
-			outBuffer.putLong(item.cacheID);//uint64_t cacheID;
+			outBuffer.putLong(item.cacheId);//uint64_t cacheId;
 			outBuffer.putInt(groupId);
 			outBuffer.putInt(item.expiration);//			uint32_t expiration;
 			outBuffer.putShort((short) keyBuf.length); // uint16_t key_length;
@@ -253,7 +253,7 @@ public final class MultiUpdateExpiration extends Defines {
 				outBuffer.put(XIXI_CATEGORY_CACHE);
 				outBuffer.put(XIXI_TYPE_UPDATE_EXPIRATION_REQ);
 				outBuffer.put(opFlag);
-				outBuffer.putLong(item.cacheID);//uint64_t cacheID;
+				outBuffer.putLong(item.cacheId);//uint64_t cacheId;
 				outBuffer.putInt(groupId);
 				outBuffer.putInt(item.expiration);//			uint32_t expiration;
 				outBuffer.putShort((short) keyBuf.length); // uint16_t key_length;
@@ -351,7 +351,7 @@ public final class MultiUpdateExpiration extends Defines {
 						run = false;
 					} else if (fixed.position() == FIXED_LENGTH) {
 						fixed.flip();
-						fixed.getLong(); // cacheID
+						fixed.getLong(); // cacheId
 						decode_count++;
 						successCount.incrementAndGet();
 						

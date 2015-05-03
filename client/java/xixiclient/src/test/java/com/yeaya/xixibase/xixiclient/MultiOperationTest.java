@@ -16,6 +16,8 @@
 
 package com.yeaya.xixibase.xixiclient;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -23,13 +25,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.yeaya.xixibase.xixiclient.multi.MultiDeleteItem;
 import com.yeaya.xixibase.xixiclient.multi.MultiUpdateItem;
 
 import junit.framework.TestCase;
 
 
-public class MultiOperationTest extends TestCase {
+public class MultiOperationTest {
 	private static final String managerName1 = "MultiOperationTest";
 	private static XixiClient cc1 = null;
 	private static XixiClientManager mgr1 = null;
@@ -59,17 +65,18 @@ public class MultiOperationTest extends TestCase {
 	//	mgr1.enableLocalCache();
 	}
 
-	protected void setUp() throws Exception {
-		super.setUp();
-		cc1 = mgr1.createXixiClient();
+	@Before
+	public void setUp() throws Exception {
+		cc1 = mgr1.createClient();
 	}
 
-	protected void tearDown() throws Exception {
-		super.tearDown();
+	@After
+	public void tearDown() throws Exception {
 		assertNotNull(cc1);
 		cc1.flush();
 	}
 
+	@Test
 	public void testMultiGet() {
 
 		String[] allKeys = { "key1", "key2", "key3", "key4", "key5", "key6", "key7" };
@@ -97,6 +104,7 @@ public class MultiOperationTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testMultiGetError() {
 		assertNull(cc1.multiGet(null));
 		ArrayList<String> allKeyList = new ArrayList<String>();
@@ -131,6 +139,7 @@ public class MultiOperationTest extends TestCase {
 		}
 	}
 	
+	@Test
 	public void testMultiAdd() {
 		int max = 100;
 		ArrayList<MultiUpdateItem> multi = new ArrayList<MultiUpdateItem>();
@@ -156,6 +165,7 @@ public class MultiOperationTest extends TestCase {
 		}
 	}
 	
+	@Test
 	public void testMultiSet() {
 		int max = 100;
 		ArrayList<MultiUpdateItem> multi = new ArrayList<MultiUpdateItem>();
@@ -181,6 +191,7 @@ public class MultiOperationTest extends TestCase {
 		}
 	}
 	
+	@Test
 	public void testMultiReplace() {
 		int max = 100;
 		ArrayList<MultiUpdateItem> multi = new ArrayList<MultiUpdateItem>();
@@ -228,6 +239,7 @@ public class MultiOperationTest extends TestCase {
 		}
 	}
 	
+	@Test
 	public void testMultiAppend() {
 		int max = 100;
 		ArrayList<MultiUpdateItem> multi = new ArrayList<MultiUpdateItem>();
@@ -261,6 +273,7 @@ public class MultiOperationTest extends TestCase {
 		}
 	}
 	
+	@Test
 	public void testMultiPrepend() {
 		int max = 100;
 		ArrayList<MultiUpdateItem> multi = new ArrayList<MultiUpdateItem>();
@@ -299,6 +312,7 @@ public class MultiOperationTest extends TestCase {
 		}
 	}
 
+	@Test
 	public void testMultiDelete() {
 		int max = 100;
 		ArrayList<MultiUpdateItem> multi = new ArrayList<MultiUpdateItem>();
@@ -338,6 +352,7 @@ public class MultiOperationTest extends TestCase {
 		}
 	}
 	
+	@Test
 	public void testMultiFlags() {
 		int max = 100;
 		ArrayList<MultiUpdateItem> multi = new ArrayList<MultiUpdateItem>();
@@ -383,6 +398,7 @@ public class MultiOperationTest extends TestCase {
 		}
 	}
 	
+	@Test
 	public void testMultiError() {
 		int ret = cc1.multiAdd(null);
 		assertEquals(ret, 0);

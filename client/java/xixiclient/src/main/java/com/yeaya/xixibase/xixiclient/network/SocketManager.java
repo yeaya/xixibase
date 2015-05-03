@@ -728,7 +728,7 @@ public class SocketManager {
 						list.pollLast();
 						socket.trueClose();
 						count++;
-						if (count >= 2) {
+						if (count >= 5) {
 							break;
 						}
 					} else {
