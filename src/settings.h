@@ -1,5 +1,5 @@
 /*
-   Copyright [2011] [Yao Yuan(yeaya@163.com)]
+   Copyright [2011-2015] [Yao Yuan(yeaya@163.com)]
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ class Settings {
 public:
 	Settings();
 	~Settings();
-	void init();
+	bool init(const string& homedir);
 	string load_conf();
 	string load_conf_web();
 	string load_conf_server();

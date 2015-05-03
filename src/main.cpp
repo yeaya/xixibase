@@ -1,5 +1,5 @@
 /*
-   Copyright [2011] [Yao Yuan(yeaya@163.com)]
+   Copyright [2011-2015] [Yao Yuan(yeaya@163.com)]
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -42,6 +42,9 @@ BOOL WINAPI console_ctrl_handler(DWORD ctrl_type) {
 
 #else
 
+//#pragma comment(lib, "ssl")
+//#pragma comment(lib, "crypto")
+
 #include <signal.h>
 void sigproc(int sig) {
 	LOG_INFO("sigproc " << sig);
@@ -60,7 +63,8 @@ void print_usage() {
 	std::cout << "\n"
 		"   -h            print help\n"
 		"   -i            print license\n"
-		"   " VERSION ", Copyright [2011] [Yao Yuan(yeaya@163.com)]\n";
+		"   -homedir homedir\n"
+		"   " VERSION ", Copyright [2011-2015] [Yao Yuan(yeaya@163.com)]\n";
 	return;
 }
 
@@ -155,14 +159,7 @@ void printf_system_info() {
 #define cmdcmp(x, const_str) strncmp(x, const_str, sizeof(const_str))
 
 int main(int argc, char* argv[]) {
-	string reason = settings_.load_conf();
-	if (reason != "") {
-		fprintf(stderr, "Failed to load configuration file, %s\n", reason.c_str());
-		return -1;
-	}
-	log_init("xixibase_%N.log", 20 * 1024 * 1024);
-	set_log_level(settings_.log_level);
-
+	string homedir;
 	for (int i = 1; i < argc; i++) {
 		if (cmdcmp(argv[i], "-h") == 0) {
 			print_usage();
@@ -170,12 +167,26 @@ int main(int argc, char* argv[]) {
 		} else if (cmdcmp(argv[i], "-i") == 0) {
 			print_license();
 			exit(EXIT_SUCCESS);
+		} else if (cmdcmp(argv[i], "-homedir") == 0 && i + 1 < argc) {
+			homedir = argv[++i];
 		} else {
 			fprintf(stderr, "Illegal argument \"%s\"\n", argv[i]);
 			print_usage();
 			exit(EXIT_FAILURE);
 		}
 	}
+
+	if (!settings_.init(homedir)) {
+		fprintf(stderr, "The homedir[%s] is not exist\n", homedir.c_str());
+		return -1;
+	}
+	string reason = settings_.load_conf();
+	if (reason != "") {
+		fprintf(stderr, "Failed to load configuration file, %s\n", reason.c_str());
+		return -1;
+	}
+	log_init("xixibase_%N.log", 20 * 1024 * 1024);
+	set_log_level(settings_.log_level);
 
 	LOG_INFO(VERSION" start.");
 

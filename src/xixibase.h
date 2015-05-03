@@ -1,5 +1,5 @@
 /*
-   Copyright [2011] [Yao Yuan(yeaya@163.com)]
+   Copyright [2011-2015] [Yao Yuan(yeaya@163.com)]
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@
 #include "defines.h"
 
 #ifndef VERSION
-#define VERSION "Xixibase/0.6"
+#define VERSION "Xixibase/0.7"
 #endif
 
 #ifndef HTTP_SERVER
-#define HTTP_SERVER "Xixibase/0.6"
+#define HTTP_SERVER "Xixibase/0.7"
 #endif
 
 typedef uint16_t xixi_reason;

@@ -1,5 +1,5 @@
 /*
-   Copyright [2011] [Yao Yuan(yeaya@163.com)]
+   Copyright [2011-2015] [Yao Yuan(yeaya@163.com)]
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@
 Settings settings_;
 
 Settings::Settings() {
-	init();
 }
 
 Settings::~Settings() {
@@ -42,16 +41,29 @@ Settings::~Settings() {
 	}
 }
 
-void Settings::init() {
-	boost::system::error_code ec;
-	boost::filesystem::path scp = boost::filesystem::system_complete(boost::filesystem::path("../"), ec);
-	if (ec) {
-		scp = boost::filesystem::system_complete(boost::filesystem::current_path(ec), ec);
+bool Settings::init(const string& homedir) {
+	if (homedir.empty()) {
+		boost::filesystem::path currentPath = boost::filesystem::current_path();
+		fprintf(stdout, "current path:%s\n", currentPath.string().c_str());
+		home_dir = currentPath.parent_path().string();
+	} else {
+		boost::filesystem::path path(homedir);
+		bool result = boost::filesystem::is_directory(path);
+		if (result) {
+			boost::system::error_code ec;
+			boost::filesystem::path scp = boost::filesystem::system_complete(path, ec);
+			if (!ec) {
+				home_dir = scp.string();
+			}
+		}
 	}
-	if (!ec) {
-		home_dir = scp.string();
+	if (home_dir.empty()) {
+		return false;
 	}
-
+	char end = home_dir[home_dir.size() - 1];
+	if (end != '/') {
+		home_dir = home_dir + "/";
+	}
 	max_bytes = 768 * 1024 * 1024;
 	max_conns = 1024;
 	factor = 1.25;
@@ -74,6 +86,7 @@ void Settings::init() {
 	default_mime_type_length = mime_type.size();
 	memcpy(default_mime_type, mime_type.c_str(), default_mime_type_length);
 	default_mime_type[default_mime_type_length] = '\0';
+	return true;
 }
 
 string Settings::load_conf() {
@@ -88,7 +101,7 @@ string Settings::load_conf_server() {
 	string xmlfile = settings_.home_dir + "conf/server.xml";
 	TiXmlDocument doc(xmlfile.c_str());
 	if (!doc.LoadFile()) {
-		return "[server.xml] load error";
+		return "Failed to load " + xmlfile;
 	}
 
 	TiXmlHandle hDoc(&doc);
