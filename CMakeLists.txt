@@ -37,10 +37,10 @@ add_executable(xixibase
     3rd/tinyxml/tinyxmlerror.cpp
     3rd/tinyxml/tinyxmlparser.cpp)
 target_link_libraries(xixibase
-    boost_date_time
-    boost_thread
-    boost_filesystem
-    boost_system
+    boost_date_time-mt
+    boost_thread-mt
+    boost_filesystem-mt
+    boost_system-mt
     ssl
     crypto)
 SET_TARGET_PROPERTIES(xixibase PROPERTIES #表示生成的执行文件所在路径
