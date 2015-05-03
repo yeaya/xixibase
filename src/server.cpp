@@ -326,6 +326,7 @@ bool Server::start() {
 //		LOG_FATAL("failed on set_password_callback, error:" << err_code.message());
 //		return false;
 //	}
+	LOG_INFO("Server::start use_certificate_chain_file");
 	boost::system::error_code err_code;
 
 	context_.use_certificate_chain_file(settings_.home_dir + "conf/cacert.pem", err_code);
@@ -333,11 +334,14 @@ bool Server::start() {
 		LOG_FATAL("failed on use_certificate_chain_file, error:" << err_code.message());
 		return false;
 	}
+	LOG_INFO("Server::start use_private_key_file");
+
 	context_.use_private_key_file(settings_.home_dir + "conf/privkey.pem", boost::asio::ssl::context::pem, err_code);
 	if (err_code) {
 		LOG_FATAL("failed on use_private_key_file, error:" << err_code.message());
 		return false;
 	}
+	LOG_INFO("Server::start init cache mgr");
 
 	cache_mgr_.init(settings_.max_bytes, settings_.item_size_max, settings_.item_size_min, settings_.factor);
 
