@@ -2,6 +2,7 @@ xixibaseDIR=$(pwd)
 cmake -DCMAKE_BUILD_TYPE=Release .
 #cmake .
 make
+rm -r -f dist
 mkdir dist
 mkdir dist/xixibase
 mkdir dist/xixibase/bin
